@@ -1,8 +1,8 @@
 'use client'
 
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { MapPin, Calendar, Phone, MessageCircle, Heart } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Calendar, Heart, MapPin, MessageCircle, Phone } from 'lucide-react'
 import Image from 'next/image'
 
 interface PetCardProps {
@@ -27,32 +27,35 @@ interface PetCardProps {
 const typeLabels = {
   dog: 'Собака',
   cat: 'Кошка',
-  small: 'Мелкое животное'
+  small: 'Мелкое животное',
 }
 
 const sizeLabels = {
   small: 'Мелкий',
   medium: 'Средний',
-  large: 'Крупный'
+  large: 'Крупный',
 }
 
-export default function PetCard({ 
-  id, 
-  name, 
-  type, 
-  breed, 
-  color, 
-  size, 
-  district, 
-  date, 
-  status, 
-  photos, 
-  description, 
+export default function PetCard({
+  id,
+  name,
+  type,
+  breed,
+  color,
+  size,
+  district,
+  date,
+  status,
+  photos,
+  description,
   contact,
-  reward 
+  reward,
 }: PetCardProps) {
   const statusColor = status === 'lost' ? 'text-red-600' : 'text-green-600'
-  const statusBg = status === 'lost' ? 'bg-red-50 dark:bg-red-900/20' : 'bg-green-50 dark:bg-green-900/20'
+  const statusBg =
+    status === 'lost'
+      ? 'bg-red-50 dark:bg-red-900/20'
+      : 'bg-green-50 dark:bg-green-900/20'
   const statusText = status === 'lost' ? 'Пропал' : 'Найден'
 
   return (
@@ -77,9 +80,11 @@ export default function PetCard({
             <Heart className="h-12 w-12 text-gray-400" />
           </div>
         )}
-        
+
         {/* Статус */}
-        <div className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-medium ${statusBg} ${statusColor}`}>
+        <div
+          className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-medium ${statusBg} ${statusColor}`}
+        >
           {statusText}
         </div>
 

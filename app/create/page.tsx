@@ -1,10 +1,17 @@
 'use client'
 
-import { useState } from 'react'
 import Header from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Camera, MapPin, Calendar, Phone, Mail, AlertCircle } from 'lucide-react'
+import {
+  AlertCircle,
+  Calendar,
+  Camera,
+  Mail,
+  MapPin,
+  Phone,
+} from 'lucide-react'
+import { useState } from 'react'
 
 export default function CreatePage() {
   const [adType, setAdType] = useState<'lost' | 'found'>('lost')
@@ -20,35 +27,44 @@ export default function CreatePage() {
     contactName: '',
     contactPhone: '',
     contactEmail: '',
-    reward: ''
+    reward: '',
   })
 
   const moscowDistricts = [
-    'Центральный', 'Северный', 'Северо-Восточный', 'Восточный',
-    'Юго-Восточный', 'Южный', 'Юго-Западный', 'Западный',
-    'Северо-Западный', 'Зеленоград', 'Новомосковский', 'Троицкий'
+    'Центральный',
+    'Северный',
+    'Северо-Восточный',
+    'Восточный',
+    'Юго-Восточный',
+    'Южный',
+    'Юго-Западный',
+    'Западный',
+    'Северо-Западный',
+    'Зеленоград',
+    'Новомосковский',
+    'Троицкий',
   ]
 
   const animalTypes = [
     { value: 'dog', label: 'Собака' },
     { value: 'cat', label: 'Кошка' },
-    { value: 'small', label: 'Мелкое животное' }
+    { value: 'small', label: 'Мелкое животное' },
   ]
 
   const sizes = [
     { value: 'small', label: 'Мелкий' },
     { value: 'medium', label: 'Средний' },
-    { value: 'large', label: 'Крупный' }
+    { value: 'large', label: 'Крупный' },
   ]
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
-      
+
       {/* Заголовок страницы */}
       <section className="bg-white dark:bg-gray-800 py-8 border-b border-gray-200 dark:border-gray-700">
         <div className="container mx-auto px-4">
@@ -142,7 +158,9 @@ export default function CreatePage() {
                   </label>
                   <select
                     value={animalType}
-                    onChange={(e) => setAnimalType((e.target as HTMLSelectElement).value)}
+                    onChange={(e) =>
+                      setAnimalType((e.target as HTMLSelectElement).value)
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Выберите тип</option>
@@ -173,7 +191,12 @@ export default function CreatePage() {
                   </label>
                   <select
                     value={formData.size}
-                    onChange={(e) => handleInputChange('size', (e.target as HTMLSelectElement).value)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        'size',
+                        (e.target as HTMLSelectElement).value,
+                      )
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Выберите размер</option>
@@ -205,7 +228,12 @@ export default function CreatePage() {
                   </label>
                   <select
                     value={formData.district}
-                    onChange={(e) => handleInputChange('district', (e.target as HTMLSelectElement).value)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        'district',
+                        (e.target as HTMLSelectElement).value,
+                      )
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Выберите район</option>
@@ -238,7 +266,9 @@ export default function CreatePage() {
                     <input
                       type="number"
                       value={formData.reward}
-                      onChange={(e) => handleInputChange('reward', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange('reward', e.target.value)
+                      }
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Например: 10000"
                     />
@@ -253,7 +283,9 @@ export default function CreatePage() {
                 </label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange('description', e.target.value)
+                  }
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={`Опишите особенности питомца, обстоятельства ${adType === 'lost' ? 'пропажи' : 'находки'}, особые приметы...`}
@@ -276,7 +308,9 @@ export default function CreatePage() {
                   <input
                     type="text"
                     value={formData.contactName}
-                    onChange={(e) => handleInputChange('contactName', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange('contactName', e.target.value)
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Например: Анна"
                   />
@@ -290,7 +324,9 @@ export default function CreatePage() {
                   <input
                     type="tel"
                     value={formData.contactPhone}
-                    onChange={(e) => handleInputChange('contactPhone', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange('contactPhone', e.target.value)
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="+7 (999) 123-45-67"
                   />
@@ -304,7 +340,9 @@ export default function CreatePage() {
                   <input
                     type="email"
                     value={formData.contactEmail}
-                    onChange={(e) => handleInputChange('contactEmail', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange('contactEmail', e.target.value)
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="example@email.com"
                   />

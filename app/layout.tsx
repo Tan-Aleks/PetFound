@@ -6,7 +6,8 @@ const inter = Inter({ subsets: ['latin', 'cyrillic'] })
 
 export const metadata: Metadata = {
   title: 'ПетПоиск Москва - Поиск пропавших питомцев',
-  description: 'Платформа для поиска пропавших домашних питомцев и размещения объявлений о найденных животных в Москве',
+  description:
+    'Платформа для поиска пропавших домашних питомцев и размещения объявлений о найденных животных в Москве',
 }
 
 export default function RootLayout({
@@ -16,9 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru">
-      <body className={inter.className}>
-        {children}
-      </body>
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }

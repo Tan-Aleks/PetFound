@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { supabase, type Pet } from '@/lib/supabase'
+import { type Pet, supabase } from '@/lib/supabase'
+import { useEffect, useState } from 'react'
 
 interface UsePetsOptions {
   type?: 'dog' | 'cat' | 'small'
@@ -53,11 +53,13 @@ export function usePets(options: UsePetsOptions = {}) {
     }
   }
 
-  const createPet = async (petData: Omit<Pet, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+  const createPet = async (
+    petData: Omit<Pet, 'id' | 'created_at' | 'updated_at' | 'user_id'>,
+  ) => {
     try {
       // Временная заглушка для создания питомца
       const mockUser = { id: 'temp-user-id' }
-      
+
       const { data, error } = await supabase
         .from('pets')
         .insert([{ ...petData, user_id: mockUser.id }])
@@ -66,10 +68,12 @@ export function usePets(options: UsePetsOptions = {}) {
 
       if (error) throw error
 
-      setPets(prev => [data, ...prev])
+      setPets((prev) => [data, ...prev])
       return data
     } catch (err) {
-      throw err instanceof Error ? err : new Error('Произошла ошибка при создании объявления')
+      throw err instanceof Error
+        ? err
+        : new Error('Произошла ошибка при создании объявления')
     }
   }
 
@@ -84,25 +88,26 @@ export function usePets(options: UsePetsOptions = {}) {
 
       if (error) throw error
 
-      setPets(prev => prev.map(pet => pet.id === id ? data : pet))
+      setPets((prev) => prev.map((pet) => (pet.id === id ? data : pet)))
       return data
     } catch (err) {
-      throw err instanceof Error ? err : new Error('Произошла ошибка при обновлении объявления')
+      throw err instanceof Error
+        ? err
+        : new Error('Произошла ошибка при обновлении объявления')
     }
   }
 
   const deletePet = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('pets')
-        .delete()
-        .eq('id', id)
+      const { error } = await supabase.from('pets').delete().eq('id', id)
 
       if (error) throw error
 
-      setPets(prev => prev.filter(pet => pet.id !== id))
+      setPets((prev) => prev.filter((pet) => pet.id !== id))
     } catch (err) {
-      throw err instanceof Error ? err : new Error('Произошла ошибка при удалении объявления')
+      throw err instanceof Error
+        ? err
+        : new Error('Произошла ошибка при удалении объявления')
     }
   }
 
@@ -113,7 +118,7 @@ export function usePets(options: UsePetsOptions = {}) {
     createPet,
     updatePet,
     deletePet,
-    refetch: fetchPets
+    refetch: fetchPets,
   }
 }
 
@@ -160,7 +165,9 @@ export function useSearchPets() {
       }
 
       if (searchParams.query && searchParams.query.trim() !== '') {
-        query = query.or(`name.ilike.%${searchParams.query}%,breed.ilike.%${searchParams.query}%,description.ilike.%${searchParams.query}%,color.ilike.%${searchParams.query}%`)
+        query = query.or(
+          `name.ilike.%${searchParams.query}%,breed.ilike.%${searchParams.query}%,description.ilike.%${searchParams.query}%,color.ilike.%${searchParams.query}%`,
+        )
       }
 
       const { data, error } = await query
@@ -169,7 +176,9 @@ export function useSearchPets() {
 
       setResults(data || [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Произошла ошибка при поиске')
+      setError(
+        err instanceof Error ? err.message : 'Произошла ошибка при поиске',
+      )
     } finally {
       setLoading(false)
     }
@@ -179,6 +188,6 @@ export function useSearchPets() {
     results,
     loading,
     error,
-    searchPets
+    searchPets,
   }
 }

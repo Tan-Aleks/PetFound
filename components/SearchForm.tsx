@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Search, MapPin, Calendar, Camera } from 'lucide-react'
+import { Calendar, Camera, MapPin, Search } from 'lucide-react'
+import { useState } from 'react'
 
 export default function SearchForm() {
   const [searchType, setSearchType] = useState<'lost' | 'found'>('lost')
@@ -11,15 +11,24 @@ export default function SearchForm() {
   const [district, setDistrict] = useState('')
 
   const moscowDistricts = [
-    'Центральный', 'Северный', 'Северо-Восточный', 'Восточный',
-    'Юго-Восточный', 'Южный', 'Юго-Западный', 'Западный',
-    'Северо-Западный', 'Зеленоград', 'Новомосковский', 'Троицкий'
+    'Центральный',
+    'Северный',
+    'Северо-Восточный',
+    'Восточный',
+    'Юго-Восточный',
+    'Южный',
+    'Юго-Западный',
+    'Западный',
+    'Северо-Западный',
+    'Зеленоград',
+    'Новомосковский',
+    'Троицкий',
   ]
 
   const animalTypes = [
     { value: 'dog', label: 'Собака' },
     { value: 'cat', label: 'Кошка' },
-    { value: 'small', label: 'Мелкие животные' }
+    { value: 'small', label: 'Мелкие животные' },
   ]
 
   return (
@@ -61,7 +70,9 @@ export default function SearchForm() {
               </label>
               <select
                 value={animalType}
-                onChange={(e) => setAnimalType((e.target as HTMLSelectElement).value)}
+                onChange={(e) =>
+                  setAnimalType((e.target as HTMLSelectElement).value)
+                }
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Все животные</option>
@@ -81,7 +92,9 @@ export default function SearchForm() {
               </label>
               <select
                 value={district}
-                onChange={(e) => setDistrict((e.target as HTMLSelectElement).value)}
+                onChange={(e) =>
+                  setDistrict((e.target as HTMLSelectElement).value)
+                }
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Все районы</option>
