@@ -39,25 +39,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "messages_pet_id_fkey"
-            columns: ["pet_id"]
+            foreignKeyName: 'messages_pet_id_fkey'
+            columns: ['pet_id']
             isOneToOne: false
-            referencedRelation: "pets"
-            referencedColumns: ["id"]
+            referencedRelation: 'pets'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "messages_receiver_id_fkey"
-            columns: ["receiver_id"]
+            foreignKeyName: 'messages_receiver_id_fkey'
+            columns: ['receiver_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "messages_sender_id_fkey"
-            columns: ["sender_id"]
+            foreignKeyName: 'messages_sender_id_fkey'
+            columns: ['sender_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -76,9 +76,9 @@ export type Database = {
           name: string | null
           photos: string[] | null
           reward: number | null
-          size: Database["public"]["Enums"]["pet_size"]
-          status: Database["public"]["Enums"]["pet_status"]
-          type: Database["public"]["Enums"]["pet_type"]
+          size: Database['public']['Enums']['pet_size']
+          status: Database['public']['Enums']['pet_status']
+          type: Database['public']['Enums']['pet_type']
           updated_at: string | null
           user_id: string
         }
@@ -96,9 +96,9 @@ export type Database = {
           name?: string | null
           photos?: string[] | null
           reward?: number | null
-          size: Database["public"]["Enums"]["pet_size"]
-          status: Database["public"]["Enums"]["pet_status"]
-          type: Database["public"]["Enums"]["pet_type"]
+          size: Database['public']['Enums']['pet_size']
+          status: Database['public']['Enums']['pet_status']
+          type: Database['public']['Enums']['pet_type']
           updated_at?: string | null
           user_id: string
         }
@@ -116,19 +116,19 @@ export type Database = {
           name?: string | null
           photos?: string[] | null
           reward?: number | null
-          size?: Database["public"]["Enums"]["pet_size"]
-          status?: Database["public"]["Enums"]["pet_status"]
-          type?: Database["public"]["Enums"]["pet_type"]
+          size?: Database['public']['Enums']['pet_size']
+          status?: Database['public']['Enums']['pet_status']
+          type?: Database['public']['Enums']['pet_type']
           updated_at?: string | null
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "pets_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'pets_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -183,11 +183,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "volunteers_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'volunteers_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -199,9 +199,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      pet_size: "small" | "medium" | "large"
-      pet_status: "lost" | "found"
-      pet_type: "dog" | "cat" | "small"
+      pet_size: 'small' | 'medium' | 'large'
+      pet_status: 'lost' | 'found'
+      pet_type: 'dog' | 'cat' | 'small'
     }
     CompositeTypes: {
       [_ in never]: never
