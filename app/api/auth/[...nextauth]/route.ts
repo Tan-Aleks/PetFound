@@ -1,8 +1,28 @@
 import { supabase } from '@/lib/supabase'
+import type { NextAuthOptions, Session } from 'next-auth'
 import NextAuth from 'next-auth'
+import type { JWT } from 'next-auth/jwt'
 import CredentialsProvider from 'next-auth/providers/credentials'
 
-export const authOptions = {
+type CredentialsInput = {
+  email: string
+  password: string
+  phone?: string
+  mode?: 'login' | 'register'
+  name?: string
+}
+
+type ExtendedJwt = JWT & {
+  id?: string
+  phone?: string | null
+}
+
+type SessionUserWithMeta = Session['user'] & {
+  id?: string
+  phone?: string | null
+}
+
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -17,24 +37,46 @@ export const authOptions = {
           throw new Error('Email and password are required')
         }
 
-        const { email, password, phone, mode, name } = credentials as any
+        const { email, password, phone, mode, name } =
+          credentials as CredentialsInput
 
         if (mode === 'register') {
-          // В реальном приложении здесь должно быть хеширование пароля и проверка Supabase Auth
-          // Для MVP используем упрощенную логику с таблицей profiles
-          const { data: newUser, error: createError } = await supabase
+          const { data: signUpData, error: signUpError } =
+            await supabase.auth.signUp({
+              email,
+              password,
+              options: {
+                data: {
+                  name: name || email.split('@')[0],
+                  phone,
+                },
+              },
+            })
+
+          if (signUpError) {
+            throw new Error(`Registration failed: ${signUpError.message}`)
+          }
+
+          const authUser = signUpData.user
+          if (!authUser?.id) {
+            throw new Error('Registration failed: empty user id')
+          }
+
+          const { data: newUser, error: profileError } = await supabase
             .from('profiles')
-            .insert({
+            .upsert({
+              id: authUser.id,
               email,
               phone,
               name: name || email.split('@')[0],
-              id: crypto.randomUUID(), // В связке с Supabase Auth это будет auth.uid()
             })
             .select()
             .single()
 
-          if (createError)
-            throw new Error('Registration failed: ' + createError.message)
+          if (profileError) {
+            throw new Error(`Profile save failed: ${profileError.message}`)
+          }
+
           return {
             id: newUser.id,
             email: newUser.email,
@@ -44,17 +86,25 @@ export const authOptions = {
         }
 
         // Логика входа
+        const { data: signInData, error: signInError } =
+          await supabase.auth.signInWithPassword({
+            email,
+            password,
+          })
+
+        if (signInError || !signInData.user) {
+          throw new Error('Invalid email or password')
+        }
+
         const { data: user, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('email', email)
+          .eq('id', signInData.user.id)
           .single()
 
         if (error || !user) {
-          throw new Error('User not found')
+          throw new Error('Profile not found')
         }
-
-        // В MVP мы предполагаем, что пароль проверяется внешними средствами или упрощенно
         return {
           id: user.id,
           email: user.email,
@@ -65,17 +115,20 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }: any) {
+    async jwt({ token, user }) {
+      const extToken = token as ExtendedJwt
       if (user) {
-        token.id = user.id
-        token.phone = user.phone
+        extToken.id = user.id
+        extToken.phone = (user as SessionUserWithMeta).phone ?? null
       }
-      return token
+      return extToken
     },
-    async session({ session, token }: any) {
+    async session({ session, token }) {
+      const extToken = token as ExtendedJwt
+      const sessionUser = session.user as SessionUserWithMeta
       if (session.user) {
-        session.user.id = token.id
-        session.user.phone = token.phone
+        sessionUser.id = extToken.id
+        sessionUser.phone = extToken.phone ?? null
       }
       return session
     },

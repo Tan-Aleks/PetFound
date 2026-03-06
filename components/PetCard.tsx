@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Calendar, Heart, MapPin, MessageCircle, Phone } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 
 interface PetCardProps {
   id: string
@@ -135,19 +136,27 @@ export default function PetCard({
             {description}
           </p>
 
+          <Button variant="outline" size="sm" className="w-full" asChild>
+            <Link href={`/pet/${id}`}>Подробнее</Link>
+          </Button>
+
           {/* Контакты */}
           <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
               Контакт: {contact.name}
             </p>
             <div className="flex space-x-2">
-              <Button size="sm" className="flex-1">
-                <Phone className="h-4 w-4 mr-1" />
-                Позвонить
+              <Button size="sm" className="flex-1" asChild>
+                <a href={`tel:${contact.phone}`}>
+                  <Phone className="h-4 w-4 mr-1" />
+                  Позвонить
+                </a>
               </Button>
-              <Button size="sm" variant="outline" className="flex-1">
-                <MessageCircle className="h-4 w-4 mr-1" />
-                Написать
+              <Button size="sm" variant="outline" className="flex-1" asChild>
+                <Link href={`/chat/${id}`}>
+                  <MessageCircle className="h-4 w-4 mr-1" />
+                  Написать
+                </Link>
               </Button>
             </div>
           </div>

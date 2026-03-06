@@ -1,5 +1,5 @@
-import { type Pet, supabase } from '@/lib/supabase'
-import { useEffect, useState } from 'react'
+import { type Pet, type PetInsert, supabase } from '@/lib/supabase'
+import { useCallback, useEffect, useState } from 'react'
 
 interface UsePetsOptions {
   type?: 'dog' | 'cat' | 'small'
@@ -13,13 +13,10 @@ export function usePets(options: UsePetsOptions = {}) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchPets()
-  }, [options])
-
-  const fetchPets = async () => {
+  const fetchPets = useCallback(async () => {
     try {
       setLoading(true)
+      setError(null)
       let query = supabase
         .from('pets')
         .select('*')
@@ -51,18 +48,17 @@ export function usePets(options: UsePetsOptions = {}) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [options.district, options.limit, options.status, options.type])
 
-  const createPet = async (
-    petData: Omit<Pet, 'id' | 'created_at' | 'updated_at' | 'user_id'>,
-  ) => {
+  useEffect(() => {
+    void fetchPets()
+  }, [fetchPets])
+
+  const createPet = async (petData: PetInsert) => {
     try {
-      // Временная заглушка для создания питомца
-      const mockUser = { id: 'temp-user-id' }
-
       const { data, error } = await supabase
         .from('pets')
-        .insert([{ ...petData, user_id: mockUser.id }])
+        .insert(petData)
         .select()
         .single()
 
@@ -111,6 +107,33 @@ export function usePets(options: UsePetsOptions = {}) {
     }
   }
 
+  const uploadPetPhotos = async (files: File[], userId: string) => {
+    const uploadedUrls: string[] = []
+
+    for (const file of files) {
+      const extension = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+      const fileName = `${userId}/${crypto.randomUUID()}.${extension}`
+
+      const { error } = await supabase.storage
+        .from('pet-photos')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false,
+        })
+
+      if (error) {
+        throw new Error(`Ошибка загрузки фото: ${error.message}`)
+      }
+
+      const { data } = supabase.storage
+        .from('pet-photos')
+        .getPublicUrl(fileName)
+      uploadedUrls.push(data.publicUrl)
+    }
+
+    return uploadedUrls
+  }
+
   return {
     pets,
     loading,
@@ -118,6 +141,7 @@ export function usePets(options: UsePetsOptions = {}) {
     createPet,
     updatePet,
     deletePet,
+    uploadPetPhotos,
     refetch: fetchPets,
   }
 }
@@ -127,62 +151,65 @@ export function useSearchPets() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const searchPets = async (searchParams: {
-    query?: string
-    type?: string
-    district?: string
-    status?: string
-    dateFrom?: string
-    dateTo?: string
-  }) => {
-    try {
-      setLoading(true)
-      setError(null)
+  const searchPets = useCallback(
+    async (searchParams: {
+      query?: string
+      type?: string
+      district?: string
+      status?: string
+      dateFrom?: string
+      dateTo?: string
+    }) => {
+      try {
+        setLoading(true)
+        setError(null)
 
-      let query = supabase
-        .from('pets')
-        .select('*')
-        .order('created_at', { ascending: false })
+        let query = supabase
+          .from('pets')
+          .select('*')
+          .order('created_at', { ascending: false })
 
-      if (searchParams.type && searchParams.type !== '') {
-        query = query.eq('type', searchParams.type)
-      }
+        if (searchParams.type && searchParams.type !== '') {
+          query = query.eq('type', searchParams.type)
+        }
 
-      if (searchParams.district && searchParams.district !== '') {
-        query = query.eq('district', searchParams.district)
-      }
+        if (searchParams.district && searchParams.district !== '') {
+          query = query.eq('district', searchParams.district)
+        }
 
-      if (searchParams.status && searchParams.status !== '') {
-        query = query.eq('status', searchParams.status)
-      }
+        if (searchParams.status && searchParams.status !== '') {
+          query = query.eq('status', searchParams.status)
+        }
 
-      if (searchParams.dateFrom) {
-        query = query.gte('date', searchParams.dateFrom)
-      }
+        if (searchParams.dateFrom) {
+          query = query.gte('date', searchParams.dateFrom)
+        }
 
-      if (searchParams.dateTo) {
-        query = query.lte('date', searchParams.dateTo)
-      }
+        if (searchParams.dateTo) {
+          query = query.lte('date', searchParams.dateTo)
+        }
 
-      if (searchParams.query && searchParams.query.trim() !== '') {
-        query = query.or(
-          `name.ilike.%${searchParams.query}%,breed.ilike.%${searchParams.query}%,description.ilike.%${searchParams.query}%,color.ilike.%${searchParams.query}%`,
+        if (searchParams.query && searchParams.query.trim() !== '') {
+          query = query.or(
+            `name.ilike.%${searchParams.query}%,breed.ilike.%${searchParams.query}%,description.ilike.%${searchParams.query}%,color.ilike.%${searchParams.query}%`,
+          )
+        }
+
+        const { data, error } = await query
+
+        if (error) throw error
+
+        setResults(data || [])
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : 'Произошла ошибка при поиске',
         )
+      } finally {
+        setLoading(false)
       }
-
-      const { data, error } = await query
-
-      if (error) throw error
-
-      setResults(data || [])
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Произошла ошибка при поиске',
-      )
-    } finally {
-      setLoading(false)
-    }
-  }
+    },
+    [],
+  )
 
   return {
     results,

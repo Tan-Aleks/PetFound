@@ -1,84 +1,63 @@
+'use client'
+
 import Header from '@/components/Header'
 import PetCard from '@/components/PetCard'
 import SearchForm from '@/components/SearchForm'
 import { Button } from '@/components/ui/button'
+import { usePets } from '@/hooks/usePets'
 import { Heart, Search, Shield, Users } from 'lucide-react'
 import Link from 'next/link'
 
-// Моковые данные для демонстрации
-const mockPets = [
-  {
-    id: '1',
-    name: 'Барсик',
-    type: 'cat' as const,
-    breed: 'Британская короткошерстная',
-    color: 'Серый',
-    size: 'medium' as const,
-    district: 'Центральный',
-    date: '2026-01-25',
-    status: 'lost' as const,
-    photos: ['/api/placeholder/300/200'],
-    description:
-      'Очень дружелюбный кот, откликается на имя. Пропал в районе Красной площади.',
-    contact: {
-      name: 'Анна',
-      phone: '+7 (999) 123-45-67',
-    },
-    reward: 10000,
-  },
-  {
-    id: '2',
-    name: 'Рекс',
-    type: 'dog' as const,
-    breed: 'Немецкая овчарка',
-    color: 'Черно-коричневый',
-    size: 'large' as const,
-    district: 'Северный',
-    date: '2026-01-28',
-    status: 'found' as const,
-    photos: ['/api/placeholder/300/200'],
-    description:
-      'Найдена собака в парке Сокольники. Очень воспитанная, в ошейнике.',
-    contact: {
-      name: 'Михаил',
-      phone: '+7 (999) 987-65-43',
-    },
-  },
-]
-
 export default function Home() {
+  const { pets, loading, error } = usePets({ limit: 6 })
+
+  const petsForCards = pets.map((pet) => ({
+    id: pet.id,
+    name: pet.name ?? 'Без имени',
+    type: pet.type,
+    breed: pet.breed ?? undefined,
+    color: pet.color,
+    size: pet.size,
+    district: pet.district,
+    date: pet.date,
+    status: pet.status,
+    photos: pet.photos ?? [],
+    description: pet.description ?? 'Описание отсутствует',
+    contact: {
+      name: pet.contact_name,
+      phone: pet.contact_phone,
+    },
+    reward: pet.reward ?? undefined,
+  }))
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background text-foreground">
       <Header />
 
       {/* Главный баннер */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
+      <section className="py-16">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Найдем каждого питомца
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 opacity-90">
-            Платформа для поиска пропавших и найденных животных в Москве
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/search">
-              <Button
-                size="lg"
-                className="bg-white text-blue-600 hover:bg-gray-100"
-              >
-                <Search className="h-5 w-5 mr-2" />
-                Найти питомца
-              </Button>
-            </Link>
-            <Link href="/create">
-              <Button
-                size="lg"
-                className="bg-red-600 text-white hover:bg-red-700 border-2 border-red-600 hover:border-red-700"
-              >
-                <Heart className="h-5 w-5 mr-2" />
-                Разместить объявление
-              </Button>
-            </Link>
+          <div className="mx-auto max-w-5xl rounded-3xl border border-border/60 bg-card/70 px-6 py-14 shadow-lg backdrop-blur-sm">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+              Найдем каждого питомца
+            </h1>
+            <p className="text-xl md:text-2xl mb-8 text-muted-foreground">
+              Платформа для поиска пропавших и найденных животных в Москве
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/search">
+                <Button size="lg">
+                  <Search className="h-5 w-5 mr-2" />
+                  Найти питомца
+                </Button>
+              </Link>
+              <Link href="/create">
+                <Button size="lg" variant="secondary">
+                  <Heart className="h-5 w-5 mr-2" />
+                  Разместить объявление
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -91,30 +70,24 @@ export default function Home() {
       </section>
 
       {/* Статистика */}
-      <section className="py-12 bg-white dark:bg-gray-800">
+      <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 rounded-3xl border border-border/60 bg-card/80 p-8 text-center">
             <div>
-              <div className="text-3xl font-bold text-blue-600 mb-2">1,247</div>
-              <div className="text-gray-600 dark:text-gray-400">
-                Питомцев найдено
-              </div>
+              <div className="text-3xl font-bold text-primary mb-2">1,247</div>
+              <div className="text-muted-foreground">Питомцев найдено</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-green-600 mb-2">
-                3,891
-              </div>
-              <div className="text-gray-600 dark:text-gray-400">
-                Активных объявлений
-              </div>
+              <div className="text-3xl font-bold text-primary mb-2">3,891</div>
+              <div className="text-muted-foreground">Активных объявлений</div>
+            </div>
+            <div className="">
+              <div className="text-3xl font-bold text-primary mb-2">567</div>
+              <div className="text-muted-foreground">Волонтеров</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-purple-600 mb-2">567</div>
-              <div className="text-gray-600 dark:text-gray-400">Волонтеров</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-red-600 mb-2">98%</div>
-              <div className="text-gray-600 dark:text-gray-400">
+              <div className="text-3xl font-bold text-primary mb-2">98%</div>
+              <div className="text-muted-foreground">
                 Успешных воссоединений
               </div>
             </div>
@@ -125,14 +98,29 @@ export default function Home() {
       {/* Последние объявления */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white">
+          <h2 className="text-3xl font-bold text-center mb-8">
             Последние объявления
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {mockPets.map((pet) => (
-              <PetCard key={pet.id} {...pet} />
-            ))}
-          </div>
+          {error && (
+            <div className="mb-6 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300">
+              Не удалось загрузить объявления: {error}
+            </div>
+          )}
+          {loading ? (
+            <div className="mb-8 text-center text-muted-foreground">
+              Загружаем объявления...
+            </div>
+          ) : petsForCards.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {petsForCards.map((pet) => (
+                <PetCard key={pet.id} {...pet} />
+              ))}
+            </div>
+          ) : (
+            <div className="mb-8 text-center text-muted-foreground">
+              Пока нет объявлений. Добавьте первое на странице создания.
+            </div>
+          )}
           <div className="text-center">
             <Link href="/search">
               <Button variant="outline" size="lg">
@@ -144,43 +132,37 @@ export default function Home() {
       </section>
 
       {/* Преимущества */}
-      <section className="py-12 bg-white dark:bg-gray-800">
+      <section className="py-12">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-900 dark:text-white">
+          <h2 className="text-3xl font-bold text-center mb-12">
             Почему выбирают нас
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="bg-blue-100 dark:bg-blue-900/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="h-8 w-8 text-blue-600" />
+            <div className="rounded-2xl border border-border/60 bg-card/80 p-6 text-center">
+              <div className="bg-primary/15 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
-                AI-поиск по фото
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <h3 className="text-xl font-semibold mb-2">AI-поиск по фото</h3>
+              <p className="text-muted-foreground">
                 Загрузите фото и найдите визуально похожих питомцев с помощью
                 искусственного интеллекта
               </p>
             </div>
-            <div className="text-center">
-              <div className="bg-green-100 dark:bg-green-900/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="h-8 w-8 text-green-600" />
+            <div className="rounded-2xl border border-border/60 bg-card/80 p-6 text-center">
+              <div className="bg-primary/15 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
-                Сеть волонтеров
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <h3 className="text-xl font-semibold mb-2">Сеть волонтеров</h3>
+              <p className="text-muted-foreground">
                 Активное сообщество волонтеров помогает в поиске по всей Москве
               </p>
             </div>
-            <div className="text-center">
-              <div className="bg-purple-100 dark:bg-purple-900/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-8 w-8 text-purple-600" />
+            <div className="rounded-2xl border border-border/60 bg-card/80 p-6 text-center">
+              <div className="bg-primary/15 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
-                Безопасность
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <h3 className="text-xl font-semibold mb-2">Безопасность</h3>
+              <p className="text-muted-foreground">
                 Проверенные пользователи и защищенная система общения
               </p>
             </div>
@@ -189,14 +171,14 @@ export default function Home() {
       </section>
 
       {/* Футер */}
-      <footer className="bg-gray-900 text-white py-8">
+      <footer className="border-t border-border/70 bg-card/70 py-8">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <Heart className="h-6 w-6 text-red-500" />
+              <Heart className="h-6 w-6 text-primary" />
               <span className="text-lg font-semibold">ПетПоиск Москва</span>
             </div>
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-muted-foreground">
               © 2026 ПетПоиск Москва. Помогаем найти каждого питомца.
             </div>
           </div>

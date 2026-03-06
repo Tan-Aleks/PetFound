@@ -1,11 +1,11 @@
 -- Создание таблиц для платформы поиска питомцев
 
--- Таблица пользователей
-CREATE TABLE users (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  name VARCHAR(100) NOT NULL,
-  phone VARCHAR(20) NOT NULL,
+-- Профили пользователей (связь с Supabase Auth)
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email VARCHAR(255) UNIQUE,
+  name VARCHAR(100),
+  phone VARCHAR(20),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -13,7 +13,7 @@ CREATE TABLE users (
 -- Таблица объявлений о питомцах
 CREATE TABLE pets (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   name VARCHAR(100),
   type VARCHAR(10) NOT NULL CHECK (type IN ('dog', 'cat', 'small')),
   breed VARCHAR(100),
@@ -36,8 +36,8 @@ CREATE TABLE pets (
 CREATE TABLE messages (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   pet_id UUID REFERENCES pets(id) ON DELETE CASCADE,
-  sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  receiver_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  sender_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  receiver_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   read BOOLEAN DEFAULT FALSE
@@ -46,7 +46,7 @@ CREATE TABLE messages (
 -- Таблица волонтеров
 CREATE TABLE volunteers (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   districts TEXT[] NOT NULL,
   active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -98,7 +98,7 @@ CREATE TABLE cross_matches (
 -- Таблица уведомлений
 CREATE TABLE notifications (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   type VARCHAR(20) NOT NULL CHECK (type IN ('match_found', 'message_received', 'volunteer_alert')),
   title VARCHAR(200) NOT NULL,
   content TEXT NOT NULL,
@@ -131,7 +131,7 @@ END;
 $$ language 'plpgsql';
 
 -- Триггеры для автоматического обновления updated_at
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_pets_updated_at BEFORE UPDATE ON pets
@@ -141,17 +141,17 @@ CREATE TRIGGER update_external_pets_updated_at BEFORE UPDATE ON external_pets
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- RLS (Row Level Security) политики
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE volunteers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- Политики для пользователей
-CREATE POLICY "Users can view their own profile" ON users
+CREATE POLICY "Users can view their own profile" ON profiles
   FOR SELECT USING (auth.uid() = id);
 
-CREATE POLICY "Users can update their own profile" ON users
+CREATE POLICY "Users can update their own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id);
 
 -- Политики для объявлений о питомцах

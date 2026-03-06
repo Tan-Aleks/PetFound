@@ -3,12 +3,32 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Calendar, Camera, MapPin, Search } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-export default function SearchForm() {
+interface SearchFormValues {
+  query?: string
+  type?: string
+  district?: string
+  status?: 'lost' | 'found'
+  dateFrom?: string
+}
+
+interface SearchFormProps {
+  onSearch?: (params: SearchFormValues) => void
+  loading?: boolean
+}
+
+export default function SearchForm({
+  onSearch,
+  loading = false,
+}: SearchFormProps) {
+  const router = useRouter()
   const [searchType, setSearchType] = useState<'lost' | 'found'>('lost')
   const [animalType, setAnimalType] = useState('')
   const [district, setDistrict] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [query, setQuery] = useState('')
 
   const moscowDistricts = [
     'Центральный',
@@ -31,6 +51,29 @@ export default function SearchForm() {
     { value: 'small', label: 'Мелкие животные' },
   ]
 
+  const handleSearch = () => {
+    const params: SearchFormValues = {
+      query: query.trim() || undefined,
+      type: animalType || undefined,
+      district: district || undefined,
+      status: searchType,
+      dateFrom: dateFrom || undefined,
+    }
+
+    if (onSearch) {
+      onSearch(params)
+      return
+    }
+
+    const search = new URLSearchParams()
+    for (const [key, value] of Object.entries(params)) {
+      if (value) {
+        search.set(key, value)
+      }
+    }
+    router.push(`/search?${search.toString()}`)
+  }
+
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardContent className="p-6">
@@ -39,6 +82,7 @@ export default function SearchForm() {
           <div className="flex justify-center">
             <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
               <button
+                type="button"
                 onClick={() => setSearchType('lost')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   searchType === 'lost'
@@ -49,6 +93,7 @@ export default function SearchForm() {
                 Пропавшие
               </button>
               <button
+                type="button"
                 onClick={() => setSearchType('found')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   searchType === 'found'
@@ -63,12 +108,34 @@ export default function SearchForm() {
 
           {/* Основная форма поиска */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Свободный поиск */}
+            <div className="md:col-span-3">
+              <label
+                htmlFor="search-query"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Поиск по описанию, породе, кличке
+              </label>
+              <input
+                id="search-query"
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Например: рыжий кот с белой лапой"
+              />
+            </div>
+
             {/* Тип животного */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="search-animal-type"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Тип животного
               </label>
               <select
+                id="search-animal-type"
                 value={animalType}
                 onChange={(e) =>
                   setAnimalType((e.target as HTMLSelectElement).value)
@@ -86,11 +153,15 @@ export default function SearchForm() {
 
             {/* Район */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="search-district"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 <MapPin className="inline h-4 w-4 mr-1" />
                 Район Москвы
               </label>
               <select
+                id="search-district"
                 value={district}
                 onChange={(e) =>
                   setDistrict((e.target as HTMLSelectElement).value)
@@ -108,12 +179,18 @@ export default function SearchForm() {
 
             {/* Дата */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="search-date"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 <Calendar className="inline h-4 w-4 mr-1" />
                 Дата пропажи/находки
               </label>
               <input
+                id="search-date"
                 type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -136,9 +213,14 @@ export default function SearchForm() {
 
           {/* Кнопка поиска */}
           <div className="flex justify-center">
-            <Button size="lg" className="px-8">
+            <Button
+              size="lg"
+              className="px-8"
+              onClick={handleSearch}
+              disabled={loading}
+            >
               <Search className="h-5 w-5 mr-2" />
-              Найти питомца
+              {loading ? 'Поиск...' : 'Найти питомца'}
             </Button>
           </div>
         </div>

@@ -1,18 +1,19 @@
 'use client'
 
+import ThemeToggle from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { Heart, Menu, Search, User } from 'lucide-react'
 import Link from 'next/link'
 
 export default function Header() {
   return (
-    <header className="border-b bg-white dark:bg-gray-900 sticky top-0 z-50">
+    <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-md">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Логотип */}
           <Link href="/" className="flex items-center space-x-2">
-            <Heart className="h-8 w-8 text-red-500" />
-            <span className="text-xl font-bold text-gray-900 dark:text-white">
+            <Heart className="h-8 w-8 text-primary" />
+            <span className="text-xl font-bold text-foreground">
               ПетПоиск Москва
             </span>
           </Link>
@@ -21,26 +22,32 @@ export default function Header() {
           <nav className="hidden md:flex items-center space-x-6">
             <Link
               href="/search"
-              className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+              className="flex items-center space-x-1 text-muted-foreground transition-colors hover:text-foreground"
             >
               <Search className="h-4 w-4" />
               <span>Поиск</span>
             </Link>
             <Link
               href="/create"
-              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+              className="text-muted-foreground transition-colors hover:text-foreground"
             >
               Разместить объявление
             </Link>
             <Link
+              href="/chat"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Диалоги
+            </Link>
+            <Link
               href="/found"
-              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+              className="text-muted-foreground transition-colors hover:text-foreground"
             >
               Найденные
             </Link>
             <Link
               href="/volunteers"
-              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+              className="text-muted-foreground transition-colors hover:text-foreground"
             >
               Волонтеры
             </Link>
@@ -48,6 +55,7 @@ export default function Header() {
 
           {/* Кнопки авторизации */}
           <div className="hidden md:flex items-center space-x-3">
+            <ThemeToggle />
             <Button variant="ghost" size="sm">
               <User className="h-4 w-4 mr-2" />
               Войти
@@ -56,9 +64,12 @@ export default function Header() {
           </div>
 
           {/* Мобильное меню */}
-          <Button variant="ghost" size="sm" className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle />
+            <Button variant="ghost" size="sm">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </div>
     </header>
