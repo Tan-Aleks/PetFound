@@ -1,4 +1,4 @@
-import { type Pet, type PetInsert, supabase } from '@/lib/supabase'
+import { type Pet, type PetInsert, getSupabase } from '@/lib/supabase'
 import { useCallback, useEffect, useState } from 'react'
 
 interface UsePetsOptions {
@@ -17,6 +17,7 @@ export function usePets(options: UsePetsOptions = {}) {
     try {
       setLoading(true)
       setError(null)
+      const supabase = getSupabase()
       let query = supabase
         .from('pets')
         .select('*')
@@ -56,6 +57,7 @@ export function usePets(options: UsePetsOptions = {}) {
 
   const createPet = async (petData: PetInsert) => {
     try {
+      const supabase = getSupabase()
       const { data, error } = await supabase
         .from('pets')
         .insert(petData)
@@ -75,6 +77,7 @@ export function usePets(options: UsePetsOptions = {}) {
 
   const updatePet = async (id: string, updates: Partial<Pet>) => {
     try {
+      const supabase = getSupabase()
       const { data, error } = await supabase
         .from('pets')
         .update(updates)
@@ -95,6 +98,7 @@ export function usePets(options: UsePetsOptions = {}) {
 
   const deletePet = async (id: string) => {
     try {
+      const supabase = getSupabase()
       const { error } = await supabase.from('pets').delete().eq('id', id)
 
       if (error) throw error
@@ -108,6 +112,7 @@ export function usePets(options: UsePetsOptions = {}) {
   }
 
   const uploadPetPhotos = async (files: File[], userId: string) => {
+    const supabase = getSupabase()
     const uploadedUrls: string[] = []
 
     for (const file of files) {
@@ -163,7 +168,7 @@ export function useSearchPets() {
       try {
         setLoading(true)
         setError(null)
-
+        const supabase = getSupabase()
         let query = supabase
           .from('pets')
           .select('*')

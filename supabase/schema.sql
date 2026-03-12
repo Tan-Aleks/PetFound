@@ -6,6 +6,7 @@ CREATE TABLE profiles (
   email VARCHAR(255) UNIQUE,
   name VARCHAR(100),
   phone VARCHAR(20),
+  district VARCHAR(50),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

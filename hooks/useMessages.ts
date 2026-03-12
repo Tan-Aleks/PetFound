@@ -1,4 +1,4 @@
-import { type Message, supabase } from '@/lib/supabase'
+import { type Message, getSupabase } from '@/lib/supabase'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { useCallback, useState } from 'react'
 
@@ -52,6 +52,7 @@ export function useMessages() {
     try {
       setLoading(true)
       setError(null)
+      const supabase = getSupabase()
 
       const { data, error } = await supabase
         .from('messages')
@@ -79,6 +80,7 @@ export function useMessages() {
     try {
       setConversationsLoading(true)
       setError(null)
+      const supabase = getSupabase()
 
       const { data, error } = await supabase
         .from('messages')
@@ -211,6 +213,7 @@ export function useMessages() {
         throw new Error('Сообщение не может быть пустым')
       }
 
+      const supabase = getSupabase()
       const { data, error } = await supabase
         .from('messages')
         .insert({
@@ -248,6 +251,7 @@ export function useMessages() {
         return
       }
 
+      const supabase = getSupabase()
       const { error } = await supabase
         .from('messages')
         .update({ read: true })
@@ -268,6 +272,7 @@ export function useMessages() {
 
   const subscribeToPetMessages = useCallback(
     (petId: string, onError?: (errorMessage: string) => void) => {
+      const supabase = getSupabase()
       const channel: RealtimeChannel = supabase
         .channel(`chat:${petId}`)
         .on(

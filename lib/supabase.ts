@@ -1,20 +1,45 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from './database.types'
 
-const getRequiredEnv = (
-  key: 'NEXT_PUBLIC_SUPABASE_URL' | 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-) => {
-  const value = process.env[key]
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${key}`)
+type SupabaseEnvKey =
+  | 'NEXT_PUBLIC_SUPABASE_URL'
+  | 'NEXT_PUBLIC_SUPABASE_ANON_KEY'
+
+let supabaseClient: ReturnType<typeof createClient<Database>> | null = null
+
+const getEnvValue = (key: SupabaseEnvKey) => process.env[key]?.trim() || null
+
+export const getSupabaseEnvError = () => {
+  const missingKeys = (
+    ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'] as const
+  ).filter((key) => !getEnvValue(key))
+
+  if (missingKeys.length === 0) {
+    return null
   }
-  return value
+
+  return `Missing required environment variable: ${missingKeys[0]}`
 }
 
-const supabaseUrl = getRequiredEnv('NEXT_PUBLIC_SUPABASE_URL')
-const supabaseAnonKey = getRequiredEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+export const isSupabaseConfigured = () => getSupabaseEnvError() === null
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+export const getSupabase = () => {
+  if (supabaseClient) {
+    return supabaseClient
+  }
+
+  const envError = getSupabaseEnvError()
+  if (envError) {
+    throw new Error(envError)
+  }
+
+  supabaseClient = createClient<Database>(
+    getEnvValue('NEXT_PUBLIC_SUPABASE_URL') as string,
+    getEnvValue('NEXT_PUBLIC_SUPABASE_ANON_KEY') as string,
+  )
+
+  return supabaseClient
+}
 
 // Типы для базы данных (теперь используются из database.types.ts)
 export type Pet = Database['public']['Tables']['pets']['Row']

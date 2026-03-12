@@ -1,5 +1,6 @@
 'use client'
 
+import { MOSCOW_DISTRICTS } from '@/lib/moscow-districts'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -8,6 +9,7 @@ import { useState } from 'react'
 export default function RegisterPage() {
   const router = useRouter()
   const [formData, setFormData] = useState({
+    district: '',
     name: '',
     email: '',
     phone: '',
@@ -26,6 +28,11 @@ export default function RegisterPage() {
     setError('')
 
     try {
+      if (!formData.district) {
+        setError('Выберите район проживания')
+        return
+      }
+
       const res = await signIn('credentials', {
         ...formData,
         mode: 'register',
@@ -96,6 +103,22 @@ export default function RegisterPage() {
               value={formData.phone}
               onChange={handleChange}
             />
+            <select
+              name="district"
+              required
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:ring-orange-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
+              value={formData.district}
+              onChange={(e) =>
+                setFormData({ ...formData, district: e.target.value })
+              }
+            >
+              <option value="">Район проживания</option>
+              {MOSCOW_DISTRICTS.map((district) => (
+                <option key={district} value={district}>
+                  {district}
+                </option>
+              ))}
+            </select>
             <input
               name="password"
               type="password"

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { usePets } from '@/hooks/usePets'
+import { MOSCOW_DISTRICTS } from '@/lib/moscow-districts'
 import {
   AlertCircle,
   Calendar,
@@ -58,21 +59,6 @@ export default function CreatePage() {
       }
     }
   }, [previewUrls])
-
-  const moscowDistricts = [
-    'Центральный',
-    'Северный',
-    'Северо-Восточный',
-    'Восточный',
-    'Юго-Восточный',
-    'Южный',
-    'Юго-Западный',
-    'Западный',
-    'Северо-Западный',
-    'Зеленоград',
-    'Новомосковский',
-    'Троицкий',
-  ]
 
   const animalTypes: { value: AnimalType; label: string }[] = [
     { value: 'dog', label: 'Собака' },
@@ -396,7 +382,7 @@ export default function CreatePage() {
                     className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
                     <option value="">Выберите район</option>
-                    {moscowDistricts.map((district) => (
+                    {MOSCOW_DISTRICTS.map((district) => (
                       <option key={district} value={district}>
                         {district}
                       </option>
