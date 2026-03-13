@@ -139,7 +139,7 @@ export default function CreatePage() {
       let photoUrls: string[] = []
 
       if (selectedPhotos.length > 0) {
-        photoUrls = await uploadPetPhotos(selectedPhotos, userId)
+        photoUrls = await uploadPetPhotos(selectedPhotos)
       }
 
       await createPet({

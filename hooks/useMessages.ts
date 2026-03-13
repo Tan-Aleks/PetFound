@@ -125,10 +125,16 @@ export function useMessages() {
 
       let profilesMap = new Map<string, ProfilePreview>()
       if (profileIds.length > 0) {
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('id,name,email')
-          .in('id', profileIds)
+        const { data: profilesData, error: profilesError } = await supabase.rpc(
+          'get_profile_previews',
+          {
+            profile_ids: profileIds,
+          },
+        )
+
+        if (profilesError) {
+          throw profilesError
+        }
 
         profilesMap = new Map(
           (profilesData || []).map((profile) => [
@@ -204,7 +210,6 @@ export function useMessages() {
   const sendMessage = useCallback(
     async (params: {
       petId: string
-      senderId: string
       receiverId: string
       content: string
     }) => {
@@ -213,25 +218,29 @@ export function useMessages() {
         throw new Error('Сообщение не может быть пустым')
       }
 
-      const supabase = getSupabase()
-      const { data, error } = await supabase
-        .from('messages')
-        .insert({
-          pet_id: params.petId,
-          sender_id: params.senderId,
-          receiver_id: params.receiverId,
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           content: text,
-          read: false,
-        })
-        .select()
-        .single()
+          petId: params.petId,
+          receiverId: params.receiverId,
+        }),
+      })
 
-      if (error) {
-        throw error
+      const payload = (await response.json()) as {
+        error?: string
+        message?: Message
       }
 
-      upsertMessage(data)
-      return data
+      if (!response.ok || !payload.message) {
+        throw new Error(payload.error || 'Ошибка при отправке сообщения')
+      }
+
+      upsertMessage(payload.message)
+      return payload.message
     },
     [upsertMessage],
   )
@@ -251,14 +260,24 @@ export function useMessages() {
         return
       }
 
-      const supabase = getSupabase()
-      const { error } = await supabase
-        .from('messages')
-        .update({ read: true })
-        .in('id', unreadIds)
+      const response = await fetch('/api/messages/read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messageIds: unreadIds,
+          petId,
+        }),
+      })
 
-      if (error) {
-        throw error
+      const payload = (await response.json()) as {
+        error?: string
+        updatedIds?: string[]
+      }
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'Ошибка обновления статуса сообщений')
       }
 
       setMessages((prev) =>

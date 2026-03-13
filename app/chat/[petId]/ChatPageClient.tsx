@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useMessages } from '@/hooks/useMessages'
-import { type Pet, supabase } from '@/lib/supabase'
+import { type Pet, getSupabase } from '@/lib/supabase'
 import { Loader2, MessageCircle } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
@@ -48,6 +48,7 @@ export default function ChatPageClient({ petId }: ChatPageClientProps) {
     const loadPet = async () => {
       try {
         setPetLoading(true)
+        const supabase = getSupabase()
         const { data, error } = await supabase
           .from('pets')
           .select('id,name,user_id,status,contact_name')
@@ -132,7 +133,6 @@ export default function ChatPageClient({ petId }: ChatPageClientProps) {
     try {
       await sendMessage({
         petId,
-        senderId: userId,
         receiverId,
         content: input,
       })

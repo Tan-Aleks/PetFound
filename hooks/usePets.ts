@@ -56,87 +56,82 @@ export function usePets(options: UsePetsOptions = {}) {
   }, [fetchPets])
 
   const createPet = async (petData: PetInsert) => {
-    try {
-      const supabase = getSupabase()
-      const { data, error } = await supabase
-        .from('pets')
-        .insert(petData)
-        .select()
-        .single()
+    const response = await fetch('/api/pets', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(petData),
+    })
 
-      if (error) throw error
-
-      setPets((prev) => [data, ...prev])
-      return data
-    } catch (err) {
-      throw err instanceof Error
-        ? err
-        : new Error('Произошла ошибка при создании объявления')
+    const payload = (await response.json()) as { error?: string; pet?: Pet }
+    if (!response.ok || !payload.pet) {
+      throw new Error(
+        payload.error || 'Произошла ошибка при создании объявления',
+      )
     }
+
+    setPets((prev) => [payload.pet as Pet, ...prev])
+    return payload.pet as Pet
   }
 
   const updatePet = async (id: string, updates: Partial<Pet>) => {
-    try {
-      const supabase = getSupabase()
-      const { data, error } = await supabase
-        .from('pets')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single()
+    const response = await fetch(`/api/pets/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updates),
+    })
 
-      if (error) throw error
-
-      setPets((prev) => prev.map((pet) => (pet.id === id ? data : pet)))
-      return data
-    } catch (err) {
-      throw err instanceof Error
-        ? err
-        : new Error('Произошла ошибка при обновлении объявления')
+    const payload = (await response.json()) as { error?: string; pet?: Pet }
+    if (!response.ok || !payload.pet) {
+      throw new Error(
+        payload.error || 'Произошла ошибка при обновлении объявления',
+      )
     }
+
+    setPets((prev) =>
+      prev.map((pet) => (pet.id === id ? (payload.pet as Pet) : pet)),
+    )
+    return payload.pet as Pet
   }
 
   const deletePet = async (id: string) => {
-    try {
-      const supabase = getSupabase()
-      const { error } = await supabase.from('pets').delete().eq('id', id)
+    const response = await fetch(`/api/pets/${id}`, {
+      method: 'DELETE',
+    })
 
-      if (error) throw error
-
-      setPets((prev) => prev.filter((pet) => pet.id !== id))
-    } catch (err) {
-      throw err instanceof Error
-        ? err
-        : new Error('Произошла ошибка при удалении объявления')
+    if (!response.ok) {
+      const payload = (await response.json()) as { error?: string }
+      throw new Error(
+        payload.error || 'Произошла ошибка при удалении объявления',
+      )
     }
+
+    setPets((prev) => prev.filter((pet) => pet.id !== id))
   }
 
-  const uploadPetPhotos = async (files: File[], userId: string) => {
-    const supabase = getSupabase()
-    const uploadedUrls: string[] = []
-
+  const uploadPetPhotos = async (files: File[]) => {
+    const formData = new FormData()
     for (const file of files) {
-      const extension = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
-      const fileName = `${userId}/${crypto.randomUUID()}.${extension}`
-
-      const { error } = await supabase.storage
-        .from('pet-photos')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false,
-        })
-
-      if (error) {
-        throw new Error(`Ошибка загрузки фото: ${error.message}`)
-      }
-
-      const { data } = supabase.storage
-        .from('pet-photos')
-        .getPublicUrl(fileName)
-      uploadedUrls.push(data.publicUrl)
+      formData.append('photos', file)
     }
 
-    return uploadedUrls
+    const response = await fetch('/api/pet-photos', {
+      method: 'POST',
+      body: formData,
+    })
+
+    const payload = (await response.json()) as {
+      error?: string
+      urls?: string[]
+    }
+    if (!response.ok || !payload.urls) {
+      throw new Error(payload.error || 'Произошла ошибка при загрузке фото')
+    }
+
+    return payload.urls
   }
 
   return {

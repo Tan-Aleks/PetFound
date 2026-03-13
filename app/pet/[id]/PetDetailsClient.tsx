@@ -3,7 +3,7 @@
 import Header from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { type Pet, supabase } from '@/lib/supabase'
+import { type Pet, getSupabase } from '@/lib/supabase'
 import { Calendar, MapPin } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -23,6 +23,7 @@ export default function PetDetailsClient({ id }: PetDetailsClientProps) {
       try {
         setLoading(true)
         setError('')
+        const supabase = getSupabase()
         const { data, error } = await supabase
           .from('pets')
           .select('*')
