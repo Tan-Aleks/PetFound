@@ -1,5 +1,7 @@
 import 'server-only'
-import { getSupabase } from '@/lib/supabase'
+import type { Database } from '@/lib/database.types'
+import { getSupabaseServer } from '@/lib/supabase-server'
+import { createClient } from '@supabase/supabase-js'
 import type { NextAuthOptions, Session } from 'next-auth'
 import type { JWT } from 'next-auth/jwt'
 import CredentialsProvider from 'next-auth/providers/credentials'
@@ -25,6 +27,24 @@ type SessionUserWithMeta = Session['user'] & {
   phone?: string | null
 }
 
+const getSupabaseAuthClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      'Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY',
+    )
+  }
+
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -46,7 +66,8 @@ export const authOptions: NextAuthOptions = {
           credentials as CredentialsInput
 
         if (mode === 'register') {
-          const supabase = getSupabase()
+          const supabase = getSupabaseAuthClient()
+          const supabaseServer = getSupabaseServer()
 
           if (!phone?.trim()) {
             throw new Error('Телефон обязателен')
@@ -80,7 +101,7 @@ export const authOptions: NextAuthOptions = {
             )
           }
 
-          const { data: newUser, error: profileError } = await supabase
+          const { data: newUser, error: profileError } = await supabaseServer
             .from('profiles')
             .upsert({
               district,
@@ -107,7 +128,8 @@ export const authOptions: NextAuthOptions = {
           }
         }
 
-        const supabase = getSupabase()
+        const supabase = getSupabaseAuthClient()
+        const supabaseServer = getSupabaseServer()
         const { data: signInData, error: signInError } =
           await supabase.auth.signInWithPassword({
             email,
@@ -118,7 +140,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Неверный email или пароль')
         }
 
-        const { data: user, error } = await supabase
+        const { data: user, error } = await supabaseServer
           .from('profiles')
           .select('*')
           .eq('id', signInData.user.id)

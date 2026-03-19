@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useMessages } from '@/hooks/useMessages'
-import { type Pet, getSupabase } from '@/lib/supabase'
+import type { Pet } from '@/lib/supabase'
 import { Loader2, MessageCircle } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
@@ -48,18 +48,27 @@ export default function ChatPageClient({ petId }: ChatPageClientProps) {
     const loadPet = async () => {
       try {
         setPetLoading(true)
-        const supabase = getSupabase()
-        const { data, error } = await supabase
-          .from('pets')
-          .select('id,name,user_id,status,contact_name')
-          .eq('id', petId)
-          .single()
-
-        if (error) {
-          throw error
+        const response = await fetch(`/api/pets/${petId}`, {
+          cache: 'no-store',
+        })
+        const payload = (await response.json()) as {
+          error?: string
+          pet?: Pet
         }
 
-        setPet(data)
+        if (!response.ok || !payload.pet) {
+          throw new Error(
+            payload.error || 'Не удалось загрузить информацию об объявлении',
+          )
+        }
+
+        setPet({
+          contact_name: payload.pet.contact_name,
+          id: payload.pet.id,
+          name: payload.pet.name,
+          status: payload.pet.status,
+          user_id: payload.pet.user_id,
+        })
       } catch (err) {
         setSubmitError(
           err instanceof Error

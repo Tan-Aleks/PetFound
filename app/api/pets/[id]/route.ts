@@ -9,6 +9,37 @@ type RouteContext = {
   params: Promise<{ id: string }>
 }
 
+export async function GET(_request: Request, context: RouteContext) {
+  try {
+    const { id } = await context.params
+    const supabase = getSupabaseServer()
+    const { data, error } = await supabase
+      .from('pets')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error || !data) {
+      return NextResponse.json(
+        { error: 'Объявление не найдено' },
+        { status: 404 },
+      )
+    }
+
+    return NextResponse.json({ pet: data })
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Не удалось загрузить объявление',
+      },
+      { status: 500 },
+    )
+  }
+}
+
 export async function PATCH(request: Request, context: RouteContext) {
   try {
     const auth = await getAuthorizedUser()

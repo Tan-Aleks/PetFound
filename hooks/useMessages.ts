@@ -2,18 +2,6 @@ import { type Message, getSupabase } from '@/lib/supabase'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { useCallback, useState } from 'react'
 
-type PetPreview = {
-  id: string
-  name: string | null
-  status: 'lost' | 'found'
-}
-
-type ProfilePreview = {
-  id: string
-  name: string | null
-  email: string | null
-}
-
 export type ConversationItem = {
   key: string
   petId: string
@@ -52,19 +40,21 @@ export function useMessages() {
     try {
       setLoading(true)
       setError(null)
-      const supabase = getSupabase()
-
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('pet_id', petId)
-        .order('created_at', { ascending: true })
-
-      if (error) {
-        throw error
+      const response = await fetch(`/api/messages?petId=${petId}`, {
+        cache: 'no-store',
+      })
+      const payload = (await response.json()) as {
+        error?: string
+        messages?: Message[]
       }
 
-      setMessages(data || [])
+      if (!response.ok || !payload.messages) {
+        throw new Error(
+          payload.error || 'Произошла ошибка при загрузке сообщений',
+        )
+      }
+
+      setMessages(payload.messages)
     } catch (err) {
       setError(
         err instanceof Error
@@ -76,126 +66,25 @@ export function useMessages() {
     }
   }, [])
 
-  const fetchConversations = useCallback(async (userId: string) => {
+  const fetchConversations = useCallback(async (_userId: string) => {
     try {
       setConversationsLoading(true)
       setError(null)
-      const supabase = getSupabase()
-
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        throw error
+      const response = await fetch('/api/messages/conversations', {
+        cache: 'no-store',
+      })
+      const payload = (await response.json()) as {
+        error?: string
+        conversations?: ConversationItem[]
       }
 
-      const source = data || []
-      const petIds = Array.from(
-        new Set(source.map((item) => item.pet_id).filter(Boolean)),
-      ) as string[]
-      const profileIds = Array.from(
-        new Set(
-          source
-            .flatMap((item) => [item.sender_id, item.receiver_id])
-            .filter((id) => id && id !== userId),
-        ),
-      ) as string[]
-
-      let petsMap = new Map<string, PetPreview>()
-      if (petIds.length > 0) {
-        const { data: petsData } = await supabase
-          .from('pets')
-          .select('id,name,status')
-          .in('id', petIds)
-
-        petsMap = new Map(
-          (petsData || []).map((pet) => [
-            pet.id,
-            {
-              id: pet.id,
-              name: pet.name,
-              status: pet.status,
-            },
-          ]),
+      if (!response.ok || !payload.conversations) {
+        throw new Error(
+          payload.error || 'Произошла ошибка при загрузке диалогов',
         )
       }
 
-      let profilesMap = new Map<string, ProfilePreview>()
-      if (profileIds.length > 0) {
-        const { data: profilesData, error: profilesError } = await supabase.rpc(
-          'get_profile_previews',
-          {
-            profile_ids: profileIds,
-          },
-        )
-
-        if (profilesError) {
-          throw profilesError
-        }
-
-        profilesMap = new Map(
-          (profilesData || []).map((profile) => [
-            profile.id,
-            {
-              id: profile.id,
-              name: profile.name,
-              email: profile.email,
-            },
-          ]),
-        )
-      }
-
-      const grouped = new Map<string, ConversationItem>()
-
-      for (const message of source) {
-        const petId = message.pet_id
-        const senderId = message.sender_id
-        const receiverId = message.receiver_id
-        if (!petId || !senderId || !receiverId) {
-          continue
-        }
-
-        const counterpartId = senderId === userId ? receiverId : senderId
-        const key = `${petId}:${counterpartId}`
-        const pet = petsMap.get(petId)
-        const counterpart = profilesMap.get(counterpartId)
-
-        const existing = grouped.get(key)
-        const unreadIncrement =
-          message.receiver_id === userId && message.read !== true ? 1 : 0
-
-        if (!existing) {
-          grouped.set(key, {
-            key,
-            petId,
-            petName: pet?.name || 'Без имени',
-            petStatus: pet?.status || 'lost',
-            counterpartId,
-            counterpartName:
-              counterpart?.name ||
-              counterpart?.email ||
-              'Неизвестный собеседник',
-            lastMessage: message.content,
-            lastMessageAt: message.created_at,
-            unreadCount: unreadIncrement,
-          })
-          continue
-        }
-
-        grouped.set(key, {
-          ...existing,
-          unreadCount: existing.unreadCount + unreadIncrement,
-        })
-      }
-
-      setConversations(
-        Array.from(grouped.values()).sort((a, b) =>
-          (b.lastMessageAt || '').localeCompare(a.lastMessageAt || ''),
-        ),
-      )
+      setConversations(payload.conversations)
     } catch (err) {
       setError(
         err instanceof Error

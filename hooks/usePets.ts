@@ -1,4 +1,4 @@
-import { type Pet, type PetInsert, getSupabase } from '@/lib/supabase'
+import type { Pet, PetInsert } from '@/lib/supabase'
 import { useCallback, useEffect, useState } from 'react'
 
 interface UsePetsOptions {
@@ -17,33 +17,37 @@ export function usePets(options: UsePetsOptions = {}) {
     try {
       setLoading(true)
       setError(null)
-      const supabase = getSupabase()
-      let query = supabase
-        .from('pets')
-        .select('*')
-        .order('created_at', { ascending: false })
+      const params = new URLSearchParams()
 
       if (options.type) {
-        query = query.eq('type', options.type)
+        params.set('type', options.type)
       }
 
       if (options.status) {
-        query = query.eq('status', options.status)
+        params.set('status', options.status)
       }
 
       if (options.district) {
-        query = query.eq('district', options.district)
+        params.set('district', options.district)
       }
 
       if (options.limit) {
-        query = query.limit(options.limit)
+        params.set('limit', String(options.limit))
       }
 
-      const { data, error } = await query
+      const response = await fetch(`/api/pets?${params.toString()}`, {
+        cache: 'no-store',
+      })
+      const payload = (await response.json()) as {
+        error?: string
+        pets?: Pet[]
+      }
 
-      if (error) throw error
+      if (!response.ok || !payload.pets) {
+        throw new Error(payload.error || 'Произошла ошибка')
+      }
 
-      setPets(data || [])
+      setPets(payload.pets)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Произошла ошибка')
     } finally {
@@ -163,43 +167,45 @@ export function useSearchPets() {
       try {
         setLoading(true)
         setError(null)
-        const supabase = getSupabase()
-        let query = supabase
-          .from('pets')
-          .select('*')
-          .order('created_at', { ascending: false })
+        const params = new URLSearchParams()
 
-        if (searchParams.type && searchParams.type !== '') {
-          query = query.eq('type', searchParams.type)
+        if (searchParams.query?.trim()) {
+          params.set('query', searchParams.query.trim())
         }
 
-        if (searchParams.district && searchParams.district !== '') {
-          query = query.eq('district', searchParams.district)
+        if (searchParams.type?.trim()) {
+          params.set('type', searchParams.type.trim())
         }
 
-        if (searchParams.status && searchParams.status !== '') {
-          query = query.eq('status', searchParams.status)
+        if (searchParams.district?.trim()) {
+          params.set('district', searchParams.district.trim())
         }
 
-        if (searchParams.dateFrom) {
-          query = query.gte('date', searchParams.dateFrom)
+        if (searchParams.status?.trim()) {
+          params.set('status', searchParams.status.trim())
         }
 
-        if (searchParams.dateTo) {
-          query = query.lte('date', searchParams.dateTo)
+        if (searchParams.dateFrom?.trim()) {
+          params.set('dateFrom', searchParams.dateFrom.trim())
         }
 
-        if (searchParams.query && searchParams.query.trim() !== '') {
-          query = query.or(
-            `name.ilike.%${searchParams.query}%,breed.ilike.%${searchParams.query}%,description.ilike.%${searchParams.query}%,color.ilike.%${searchParams.query}%`,
-          )
+        if (searchParams.dateTo?.trim()) {
+          params.set('dateTo', searchParams.dateTo.trim())
         }
 
-        const { data, error } = await query
+        const response = await fetch(`/api/pets?${params.toString()}`, {
+          cache: 'no-store',
+        })
+        const payload = (await response.json()) as {
+          error?: string
+          pets?: Pet[]
+        }
 
-        if (error) throw error
+        if (!response.ok || !payload.pets) {
+          throw new Error(payload.error || 'Произошла ошибка при поиске')
+        }
 
-        setResults(data || [])
+        setResults(payload.pets)
       } catch (err) {
         setError(
           err instanceof Error ? err.message : 'Произошла ошибка при поиске',

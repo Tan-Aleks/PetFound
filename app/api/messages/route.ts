@@ -10,6 +10,52 @@ type MessagePayload = {
   receiverId?: string
 }
 
+export async function GET(request: Request) {
+  try {
+    const auth = await getAuthorizedUser()
+    if (!auth) {
+      return NextResponse.json(
+        { error: 'Требуется авторизация' },
+        { status: 401 },
+      )
+    }
+
+    const { searchParams } = new URL(request.url)
+    const petId = searchParams.get('petId')?.trim()
+
+    if (!petId) {
+      return NextResponse.json(
+        { error: 'Не указан идентификатор объявления' },
+        { status: 400 },
+      )
+    }
+
+    const supabase = getSupabaseServer()
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('pet_id', petId)
+      .or(`sender_id.eq.${auth.userId},receiver_id.eq.${auth.userId}`)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw error
+    }
+
+    return NextResponse.json({ messages: data || [] })
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Не удалось загрузить сообщения',
+      },
+      { status: 500 },
+    )
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const auth = await getAuthorizedUser()

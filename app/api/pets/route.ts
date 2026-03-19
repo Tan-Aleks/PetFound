@@ -5,6 +5,73 @@ import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const supabase = getSupabaseServer()
+    let query = supabase
+      .from('pets')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    const type = searchParams.get('type')?.trim()
+    const status = searchParams.get('status')?.trim()
+    const district = searchParams.get('district')?.trim()
+    const dateFrom = searchParams.get('dateFrom')?.trim()
+    const dateTo = searchParams.get('dateTo')?.trim()
+    const search = searchParams.get('query')?.trim()
+    const limit = Number.parseInt(searchParams.get('limit') || '', 10)
+
+    if (type) {
+      query = query.eq('type', type)
+    }
+
+    if (status) {
+      query = query.eq('status', status)
+    }
+
+    if (district) {
+      query = query.eq('district', district)
+    }
+
+    if (dateFrom) {
+      query = query.gte('date', dateFrom)
+    }
+
+    if (dateTo) {
+      query = query.lte('date', dateTo)
+    }
+
+    if (search) {
+      query = query.or(
+        `name.ilike.%${search}%,breed.ilike.%${search}%,description.ilike.%${search}%,color.ilike.%${search}%`,
+      )
+    }
+
+    if (Number.isFinite(limit) && limit > 0) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      throw error
+    }
+
+    return NextResponse.json({ pets: data || [] })
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Не удалось загрузить объявления',
+      },
+      { status: 500 },
+    )
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const auth = await getAuthorizedUser()
