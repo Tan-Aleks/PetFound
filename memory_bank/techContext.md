@@ -20,6 +20,7 @@
 - Публичные переменные: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 - Серверные переменные: `SUPABASE_SERVICE_ROLE_KEY`, `NEXTAUTH_SECRET`.
 - `next.config.js` сейчас допускает build с игнорированием ESLint и TypeScript ошибок, что полезно как временный стабилизатор, но требует отдельного возврата к строгой сборке.
+- Локально в текущем окружении отсутствует `supabase` CLI, поэтому применение схемы нужно выполнять через Supabase SQL Editor или отдельно настроенный CLI-контур.
 
 ## Quality Rules
 - Пакетный менеджер проекта: `bun`.

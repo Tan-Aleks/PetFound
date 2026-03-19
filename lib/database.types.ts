@@ -12,18 +12,18 @@ export type Database = {
       cross_matches: {
         Row: {
           created_at: string | null
-          external_pet_id: string | null
+          external_pet_id: string
           id: string
-          internal_pet_id: string | null
+          internal_pet_id: string
           match_type: Database['public']['Enums']['match_type']
           similarity_score: number
           verified: boolean | null
         }
         Insert: {
           created_at?: string | null
-          external_pet_id?: string | null
+          external_pet_id: string
           id?: string
-          internal_pet_id?: string | null
+          internal_pet_id: string
           match_type: Database['public']['Enums']['match_type']
           similarity_score: number
           verified?: boolean | null
@@ -68,7 +68,7 @@ export type Database = {
           name: string | null
           photos: string[] | null
           size: Database['public']['Enums']['pet_size']
-          source_id: string | null
+          source_id: string
           source_url: string
           status: Database['public']['Enums']['pet_status']
           type: Database['public']['Enums']['pet_type']
@@ -87,7 +87,7 @@ export type Database = {
           name?: string | null
           photos?: string[] | null
           size: Database['public']['Enums']['pet_size']
-          source_id?: string | null
+          source_id: string
           source_url: string
           status: Database['public']['Enums']['pet_status']
           type: Database['public']['Enums']['pet_type']
@@ -154,19 +154,19 @@ export type Database = {
           content: string
           created_at: string | null
           id: string
-          pet_id: string | null
+          pet_id: string
           read: boolean | null
-          receiver_id: string | null
-          sender_id: string | null
+          receiver_id: string
+          sender_id: string
         }
         Insert: {
           content: string
           created_at?: string | null
           id?: string
-          pet_id?: string | null
+          pet_id: string
           read?: boolean | null
-          receiver_id?: string | null
-          sender_id?: string | null
+          receiver_id: string
+          sender_id: string
         }
         Update: {
           content?: string
@@ -212,7 +212,7 @@ export type Database = {
           sent_sms: boolean | null
           title: string
           type: Database['public']['Enums']['notification_type']
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           content: string
@@ -224,7 +224,7 @@ export type Database = {
           sent_sms?: boolean | null
           title: string
           type: Database['public']['Enums']['notification_type']
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           content?: string
@@ -355,14 +355,14 @@ export type Database = {
           created_at: string | null
           districts: string[] | null
           id: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           active?: boolean | null
           created_at?: string | null
           districts?: string[] | null
           id?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           active?: boolean | null

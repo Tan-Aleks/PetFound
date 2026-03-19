@@ -25,3 +25,4 @@
 - `app/api/*` — граница между UI и защищенными операциями с данными.
 - `lib/auth.ts` и `lib/server-auth.ts` — граница авторизации и проверки сессии.
 - `supabase/schema.sql` и `lib/database.types.ts` должны синхронизироваться как единая контрактная пара.
+- `supabase/preflight_checks.sql` и `supabase/postflight_checks.sql` используются как закрытый контур проверки перед и после применения схемы в реальном Supabase-проекте.

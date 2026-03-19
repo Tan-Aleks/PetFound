@@ -1,9 +1,9 @@
 # Progress
 
 ## Control Changes
-- `last_checked_commit`: `b75cb79`
+- `last_checked_commit`: `e07b10e`
 - `checked_at`: `2026-03-19`
-- `comparison_result`: `git log b75cb79..` не вернул новых коммитов на момент проверки
+- `comparison_result`: `git log e07b10e..` не вернул новых коммитов на момент проверки
 
 ## Completed Milestones
 - Реорганизована структура проекта и переход на `bun`.
@@ -18,14 +18,17 @@
 
 ## In Progress
 - Финальная синхронизация `supabase/schema.sql`, `lib/database.types.ts` и RLS-политик.
-- Проверка production-конфигурации bucket `pet-photos`.
+- Проверка production-конфигурации bucket `pet-photos` и фактического применения ужесточенных ограничений в Supabase-проекте.
 
 ## Known Issues
 - `bunx tsc --noEmit` сейчас падает на уже сгенерированных файлах в `.next/types`, а не на исходниках приложения.
 - В репозитории остается legacy-директория `docs/memory-bank`; актуальным источником контекста считается только корневой `memory_bank`.
 - `next.config.js` временно игнорирует TypeScript и ESLint ошибки на build.
+- В текущем локальном окружении нет `supabase` CLI и нет `SUPABASE_SERVICE_ROLE_KEY` в `.env.local`, поэтому прямое применение схемы к удаленному проекту отсюда не выполнено.
 
 ## Changelog
 - `2026-03-19`: создан канонический корневой `memory_bank`, добавлены `Project Deliverables`, `last_checked_commit`, модульная и UI-документация.
 - `2026-03-19`: создан `docs/README.md` как единый high-level источник архитектуры.
 - `2026-03-19`: зафиксирован новый контур доступа к данным через server-side API для объявлений и сообщений.
+- `2026-03-19`: в `supabase/schema.sql` ужесточены обязательные внешние ключи, добавлены индексы и расширено покрытие RLS для `external_*` и `cross_matches`.
+- `2026-03-19`: добавлены `supabase/preflight_checks.sql` и `supabase/postflight_checks.sql` для безопасной проверки миграции и bucket `pet-photos`.

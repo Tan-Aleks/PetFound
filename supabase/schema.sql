@@ -1,6 +1,6 @@
 -- Schema for the PetFound MVP.
--- Browser reads still use the public Supabase client.
--- All writes that affect protected data must go through server-side route
+-- Public and private reads are served through Next.js route handlers.
+-- Protected writes and private reads must go through server-side route
 -- handlers with NextAuth session checks and a service-role Supabase client.
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -65,17 +65,18 @@ CREATE TABLE IF NOT EXISTS pets (
 
 CREATE TABLE IF NOT EXISTS messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  pet_id UUID REFERENCES pets(id) ON DELETE CASCADE,
-  sender_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-  receiver_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+  sender_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  receiver_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  read BOOLEAN DEFAULT FALSE
+  read BOOLEAN DEFAULT FALSE,
+  CONSTRAINT messages_sender_receiver_check CHECK (sender_id <> receiver_id)
 );
 
 CREATE TABLE IF NOT EXISTS volunteers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   districts TEXT[] DEFAULT '{}'::TEXT[],
   active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -92,7 +93,7 @@ CREATE TABLE IF NOT EXISTS external_sources (
 
 CREATE TABLE IF NOT EXISTS external_pets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  source_id UUID REFERENCES external_sources(id) ON DELETE CASCADE,
+  source_id UUID NOT NULL REFERENCES external_sources(id) ON DELETE CASCADE,
   external_id VARCHAR(255) NOT NULL,
   name VARCHAR(100),
   type pet_type NOT NULL,
@@ -113,8 +114,8 @@ CREATE TABLE IF NOT EXISTS external_pets (
 
 CREATE TABLE IF NOT EXISTS cross_matches (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  internal_pet_id UUID REFERENCES pets(id) ON DELETE CASCADE,
-  external_pet_id UUID REFERENCES external_pets(id) ON DELETE CASCADE,
+  internal_pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+  external_pet_id UUID NOT NULL REFERENCES external_pets(id) ON DELETE CASCADE,
   similarity_score DECIMAL(3, 2) NOT NULL,
   match_type match_type NOT NULL,
   verified BOOLEAN DEFAULT FALSE,
@@ -123,7 +124,7 @@ CREATE TABLE IF NOT EXISTS cross_matches (
 
 CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   type notification_type NOT NULL,
   title VARCHAR(200) NOT NULL,
   content TEXT NOT NULL,
@@ -144,9 +145,43 @@ CREATE INDEX IF NOT EXISTS idx_messages_sender_id ON messages(sender_id);
 CREATE INDEX IF NOT EXISTS idx_messages_receiver_id ON messages(receiver_id);
 CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_volunteers_user_id ON volunteers(user_id);
 CREATE INDEX IF NOT EXISTS idx_external_pets_type ON external_pets(type);
 CREATE INDEX IF NOT EXISTS idx_external_pets_district ON external_pets(district);
 CREATE INDEX IF NOT EXISTS idx_external_pets_status ON external_pets(status);
+CREATE INDEX IF NOT EXISTS idx_cross_matches_internal_pet_id ON cross_matches(internal_pet_id);
+CREATE INDEX IF NOT EXISTS idx_cross_matches_external_pet_id ON cross_matches(external_pet_id);
+
+ALTER TABLE messages
+  ALTER COLUMN pet_id SET NOT NULL,
+  ALTER COLUMN sender_id SET NOT NULL,
+  ALTER COLUMN receiver_id SET NOT NULL;
+
+ALTER TABLE volunteers
+  ALTER COLUMN user_id SET NOT NULL;
+
+ALTER TABLE external_pets
+  ALTER COLUMN source_id SET NOT NULL;
+
+ALTER TABLE cross_matches
+  ALTER COLUMN internal_pet_id SET NOT NULL,
+  ALTER COLUMN external_pet_id SET NOT NULL;
+
+ALTER TABLE notifications
+  ALTER COLUMN user_id SET NOT NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'messages_sender_receiver_check'
+  ) THEN
+    ALTER TABLE messages
+    ADD CONSTRAINT messages_sender_receiver_check
+    CHECK (sender_id <> receiver_id);
+  END IF;
+END $$;
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -179,11 +214,17 @@ ALTER TABLE pets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE volunteers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE external_sources ENABLE ROW LEVEL SECURITY;
+ALTER TABLE external_pets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cross_matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles FORCE ROW LEVEL SECURITY;
 ALTER TABLE pets FORCE ROW LEVEL SECURITY;
 ALTER TABLE messages FORCE ROW LEVEL SECURITY;
 ALTER TABLE volunteers FORCE ROW LEVEL SECURITY;
 ALTER TABLE notifications FORCE ROW LEVEL SECURITY;
+ALTER TABLE external_sources FORCE ROW LEVEL SECURITY;
+ALTER TABLE external_pets FORCE ROW LEVEL SECURITY;
+ALTER TABLE cross_matches FORCE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can view their own profile" ON profiles;
 CREATE POLICY "Users can view their own profile" ON profiles
@@ -264,6 +305,21 @@ CREATE POLICY "Users can update their notifications" ON notifications
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Anyone can view external sources" ON external_sources;
+CREATE POLICY "Anyone can view external sources" ON external_sources
+  FOR SELECT
+  USING (TRUE);
+
+DROP POLICY IF EXISTS "Anyone can view external pets" ON external_pets;
+CREATE POLICY "Anyone can view external pets" ON external_pets
+  FOR SELECT
+  USING (TRUE);
+
+DROP POLICY IF EXISTS "Anyone can view cross matches" ON cross_matches;
+CREATE POLICY "Anyone can view cross matches" ON cross_matches
+  FOR SELECT
+  USING (TRUE);
+
 CREATE OR REPLACE FUNCTION get_profile_previews(profile_ids UUID[])
 RETURNS TABLE (
   id UUID,
@@ -286,6 +342,8 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('pet-photos', 'pet-photos', TRUE)
 ON CONFLICT (id) DO UPDATE
 SET public = EXCLUDED.public;
+
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public can view pet photos" ON storage.objects;
 CREATE POLICY "Public can view pet photos" ON storage.objects

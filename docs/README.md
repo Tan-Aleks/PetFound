@@ -39,3 +39,4 @@
 ## Related Specifications
 - Основное ТЗ: [`docs/ТЗ_Поиск_Питомцев_Москва.md`](./ТЗ_Поиск_Питомцев_Москва.md)
 - Детальная оперативная документация: `memory_bank/*`
+- SQL preflight/postflight для применения схемы: `supabase/preflight_checks.sql`, `supabase/postflight_checks.sql`
