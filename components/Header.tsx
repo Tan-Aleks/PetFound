@@ -4,7 +4,13 @@ import ThemeToggle from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { Heart, Menu, Search, User } from 'lucide-react'
 import { useSession } from 'next-auth/react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
+
+const NotificationDropdown = dynamic(
+  () => import('@/components/NotificationDropdown'),
+  { ssr: false },
+)
 
 export default function Header() {
   const { data: session } = useSession()
@@ -47,12 +53,15 @@ export default function Header() {
           <div className="hidden md:flex items-center space-x-3">
             <ThemeToggle />
             {session ? (
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/profile">
-                  <User className="h-4 w-4 mr-2" />
-                  {session.user?.name || 'Профиль'}
-                </Link>
-              </Button>
+              <>
+                <NotificationDropdown />
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/profile">
+                    <User className="h-4 w-4 mr-2" />
+                    {session.user?.name || 'Профиль'}
+                  </Link>
+                </Button>
+              </>
             ) : (
               <>
                 <Button variant="ghost" size="sm" asChild>
