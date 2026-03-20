@@ -1,6 +1,6 @@
 import 'server-only'
 import type { Database } from '@/lib/database.types'
-import { getSupabaseServer } from '@/lib/supabase-server'
+import { getSupabasePublicServer } from '@/lib/supabase-server'
 import { createClient } from '@supabase/supabase-js'
 import type { NextAuthOptions, Session } from 'next-auth'
 import type { JWT } from 'next-auth/jwt'
@@ -67,7 +67,7 @@ export const authOptions: NextAuthOptions = {
 
         if (mode === 'register') {
           const supabase = getSupabaseAuthClient()
-          const supabaseServer = getSupabaseServer()
+          const supabaseServer = getSupabasePublicServer()
 
           if (!phone?.trim()) {
             throw new Error('Телефон обязателен')
@@ -129,7 +129,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         const supabase = getSupabaseAuthClient()
-        const supabaseServer = getSupabaseServer()
+        const supabaseServer = getSupabasePublicServer()
         const { data: signInData, error: signInError } =
           await supabase.auth.signInWithPassword({
             email,

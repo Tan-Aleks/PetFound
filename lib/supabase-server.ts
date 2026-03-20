@@ -2,7 +2,10 @@ import 'server-only'
 import type { Database } from '@/lib/database.types'
 import { createClient } from '@supabase/supabase-js'
 
-type ServerEnvKey = 'NEXT_PUBLIC_SUPABASE_URL' | 'SUPABASE_SERVICE_ROLE_KEY'
+type ServerEnvKey =
+  | 'NEXT_PUBLIC_SUPABASE_URL'
+  | 'SUPABASE_SERVICE_ROLE_KEY'
+  | 'NEXT_PUBLIC_SUPABASE_ANON_KEY'
 
 const getServerEnvValue = (key: ServerEnvKey) =>
   process.env[key]?.trim() || null
@@ -35,4 +38,22 @@ export const getSupabaseServer = () => {
       },
     },
   )
+}
+
+export const getSupabasePublicServer = () => {
+  const url = getServerEnvValue('NEXT_PUBLIC_SUPABASE_URL')
+  const anonKey = getServerEnvValue('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+
+  if (!url || !anonKey) {
+    throw new Error(
+      'Missing required environment variables for public Supabase access',
+    )
+  }
+
+  return createClient<Database>(url, anonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
 }

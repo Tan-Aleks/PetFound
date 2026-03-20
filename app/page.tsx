@@ -5,7 +5,7 @@ import PetCard from '@/components/PetCard'
 import SearchForm from '@/components/SearchForm'
 import { Button } from '@/components/ui/button'
 import { usePets } from '@/hooks/usePets'
-import { Heart, Search, Shield, Users } from 'lucide-react'
+import { Heart, Search, Shield, Zap } from 'lucide-react'
 import Link from 'next/link'
 
 export default function Home() {
@@ -72,7 +72,7 @@ export default function Home() {
       {/* Статистика */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 rounded-3xl border border-border/60 bg-card/80 p-8 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 rounded-3xl border border-border/60 bg-card/80 p-8 text-center">
             <div>
               <div className="text-3xl font-bold text-primary mb-2">1,247</div>
               <div className="text-muted-foreground">Питомцев найдено</div>
@@ -80,10 +80,6 @@ export default function Home() {
             <div>
               <div className="text-3xl font-bold text-primary mb-2">3,891</div>
               <div className="text-muted-foreground">Активных объявлений</div>
-            </div>
-            <div className="">
-              <div className="text-3xl font-bold text-primary mb-2">567</div>
-              <div className="text-muted-foreground">Волонтеров</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-primary mb-2">98%</div>
@@ -150,11 +146,11 @@ export default function Home() {
             </div>
             <div className="rounded-2xl border border-border/60 bg-card/80 p-6 text-center">
               <div className="bg-primary/15 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="h-8 w-8 text-primary" />
+                <Zap className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Сеть волонтеров</h3>
+              <h3 className="text-xl font-semibold mb-2">Быстрый отклик</h3>
               <p className="text-muted-foreground">
-                Активное сообщество волонтеров помогает в поиске по всей Москве
+                Мгновенное оповещение владельцев и мгновенная связь через чат
               </p>
             </div>
             <div className="rounded-2xl border border-border/60 bg-card/80 p-6 text-center">

@@ -2,7 +2,14 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Calendar, Heart, MapPin, MessageCircle, Phone } from 'lucide-react'
+import {
+  Calendar,
+  Heart,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Sparkles,
+} from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -23,6 +30,7 @@ interface PetCardProps {
     phone: string
   }
   reward?: number
+  ai_similarity?: number
 }
 
 const typeLabels = {
@@ -51,6 +59,7 @@ export default function PetCard({
   description,
   contact,
   reward,
+  ai_similarity,
 }: PetCardProps) {
   const statusColor = status === 'lost' ? 'text-red-600' : 'text-green-600'
   const statusBg =
@@ -93,6 +102,14 @@ export default function PetCard({
         {reward && status === 'lost' && (
           <div className="absolute bottom-2 left-2 bg-yellow-500 text-white px-2 py-1 rounded text-xs font-medium">
             Вознаграждение: {reward.toLocaleString()} ₽
+          </div>
+        )}
+
+        {/* AI Similarity Badge */}
+        {ai_similarity !== undefined && (
+          <div className="absolute top-2 right-2 bg-purple-500 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+            <Sparkles className="h-3 w-3" />
+            {ai_similarity}% сходство
           </div>
         )}
       </div>

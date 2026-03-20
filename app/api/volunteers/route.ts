@@ -1,5 +1,5 @@
 import { getAuthorizedUser } from '@/lib/server-auth'
-import { getSupabaseServer } from '@/lib/supabase-server'
+import { getSupabasePublicServer } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -14,7 +14,7 @@ export async function GET() {
       )
     }
 
-    const supabase = getSupabaseServer()
+    const supabase = getSupabasePublicServer()
 
     const { data, error } = await supabase
       .from('volunteers')
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     }
 
     const { districts } = await request.json()
-    const supabase = getSupabaseServer()
+    const supabase = getSupabasePublicServer()
 
     const { data, error } = await supabase
       .from('volunteers')
@@ -91,7 +91,7 @@ export async function DELETE() {
       )
     }
 
-    const supabase = getSupabaseServer()
+    const supabase = getSupabasePublicServer()
 
     const { error } = await supabase
       .from('volunteers')

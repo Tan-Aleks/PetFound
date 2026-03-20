@@ -1,6 +1,6 @@
 import { getAuthorizedUser } from '@/lib/server-auth'
 import type { PetInsert } from '@/lib/supabase'
-import { getSupabaseServer } from '@/lib/supabase-server'
+import { getSupabasePublicServer } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -8,7 +8,7 @@ export const runtime = 'nodejs'
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const supabase = getSupabaseServer()
+    const supabase = getSupabasePublicServer()
     let query = supabase
       .from('pets')
       .select('*')
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     }
 
     const payload = (await request.json()) as Partial<PetInsert>
-    const supabase = getSupabaseServer()
+    const supabase = getSupabasePublicServer()
 
     const petPayload: PetInsert = {
       user_id: auth.userId,

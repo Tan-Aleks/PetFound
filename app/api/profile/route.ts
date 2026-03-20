@@ -1,5 +1,5 @@
 import { getAuthorizedUser } from '@/lib/server-auth'
-import { getSupabaseServer } from '@/lib/supabase-server'
+import { getSupabasePublicServer } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -14,7 +14,7 @@ export async function GET() {
       )
     }
 
-    const supabase = getSupabaseServer()
+    const supabase = getSupabasePublicServer()
 
     const { data: profile, error } = await supabase
       .from('profiles')
@@ -51,7 +51,7 @@ export async function PUT(request: Request) {
     }
 
     const payload = await request.json()
-    const supabase = getSupabaseServer()
+    const supabase = getSupabasePublicServer()
 
     const { data, error } = await supabase
       .from('profiles')

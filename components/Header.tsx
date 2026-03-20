@@ -2,7 +2,7 @@
 
 import ThemeToggle from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
-import { Heart, Menu, Search, User } from 'lucide-react'
+import { Globe, Heart, Menu, Search, User } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
@@ -33,6 +33,13 @@ export default function Header() {
             >
               <Search className="h-4 w-4" />
               <span>Поиск</span>
+            </Link>
+            <Link
+              href="/external"
+              className="flex items-center space-x-1 text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Globe className="h-4 w-4" />
+              <span>Источники</span>
             </Link>
             <Link
               href="/create"

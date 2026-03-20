@@ -1,5 +1,5 @@
 import { getAuthorizedUser } from '@/lib/server-auth'
-import { getSupabaseServer } from '@/lib/supabase-server'
+import { getSupabasePublicServer } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -18,7 +18,7 @@ export async function DELETE(
     }
 
     const { id } = await params
-    const supabase = getSupabaseServer()
+    const supabase = getSupabasePublicServer()
 
     const { error: fetchError } = await supabase
       .from('pets')

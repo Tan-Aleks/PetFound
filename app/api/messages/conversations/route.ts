@@ -1,6 +1,6 @@
 import type { Database } from '@/lib/database.types'
 import { getAuthorizedUser } from '@/lib/server-auth'
-import { getSupabaseServer } from '@/lib/supabase-server'
+import { getSupabasePublicServer } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -29,7 +29,7 @@ export async function GET() {
       )
     }
 
-    const supabase = getSupabaseServer()
+    const supabase = getSupabasePublicServer()
     const { data, error } = await supabase
       .from('messages')
       .select('*')
