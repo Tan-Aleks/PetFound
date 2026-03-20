@@ -3,14 +3,16 @@
 import ThemeToggle from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { Heart, Menu, Search, User } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 
 export default function Header() {
+  const { data: session } = useSession()
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-md">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
-          {/* Логотип */}
           <Link href="/" className="flex items-center space-x-2">
             <Heart className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold text-foreground">
@@ -18,7 +20,6 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* Навигация для десктопа */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link
               href="/search"
@@ -33,37 +34,37 @@ export default function Header() {
             >
               Разместить объявление
             </Link>
-            <Link
-              href="/chat"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Диалоги
-            </Link>
-            <Link
-              href="/found"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Найденные
-            </Link>
-            <Link
-              href="/volunteers"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Волонтеры
-            </Link>
+            {session && (
+              <Link
+                href="/chat"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Диалоги
+              </Link>
+            )}
           </nav>
 
-          {/* Кнопки авторизации */}
           <div className="hidden md:flex items-center space-x-3">
             <ThemeToggle />
-            <Button variant="ghost" size="sm">
-              <User className="h-4 w-4 mr-2" />
-              Войти
-            </Button>
-            <Button size="sm">Регистрация</Button>
+            {session ? (
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/profile">
+                  <User className="h-4 w-4 mr-2" />
+                  {session.user?.name || 'Профиль'}
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/login">Войти</Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link href="/register">Регистрация</Link>
+                </Button>
+              </>
+            )}
           </div>
 
-          {/* Мобильное меню */}
           <div className="flex items-center gap-2 md:hidden">
             <ThemeToggle />
             <Button variant="ghost" size="sm">
