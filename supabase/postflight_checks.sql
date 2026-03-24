@@ -7,7 +7,6 @@ FROM information_schema.columns
 WHERE table_schema = 'public'
   AND (
     (table_name = 'messages' AND column_name IN ('pet_id', 'sender_id', 'receiver_id'))
-    OR (table_name = 'volunteers' AND column_name = 'user_id')
     OR (table_name = 'notifications' AND column_name = 'user_id')
     OR (table_name = 'external_pets' AND column_name = 'source_id')
     OR (table_name = 'cross_matches' AND column_name IN ('internal_pet_id', 'external_pet_id'))
@@ -31,7 +30,6 @@ WHERE schemaname = 'public'
     'profiles',
     'pets',
     'messages',
-    'volunteers',
     'notifications',
     'external_sources',
     'external_pets',
@@ -65,7 +63,6 @@ SELECT indexname
 FROM pg_indexes
 WHERE schemaname = 'public'
   AND indexname IN (
-    'idx_volunteers_user_id',
     'idx_cross_matches_internal_pet_id',
     'idx_cross_matches_external_pet_id'
   )

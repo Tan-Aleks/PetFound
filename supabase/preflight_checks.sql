@@ -14,10 +14,6 @@ SELECT 'messages.receiver_id IS NULL', COUNT(*)
 FROM public.messages
 WHERE receiver_id IS NULL
 UNION ALL
-SELECT 'volunteers.user_id IS NULL', COUNT(*)
-FROM public.volunteers
-WHERE user_id IS NULL
-UNION ALL
 SELECT 'notifications.user_id IS NULL', COUNT(*)
 FROM public.notifications
 WHERE user_id IS NULL
@@ -53,11 +49,6 @@ UNION ALL
 SELECT 'messages.receiver_id -> profiles.id', COUNT(*)
 FROM public.messages m
 LEFT JOIN public.profiles p ON p.id = m.receiver_id
-WHERE p.id IS NULL
-UNION ALL
-SELECT 'volunteers.user_id -> profiles.id', COUNT(*)
-FROM public.volunteers v
-LEFT JOIN public.profiles p ON p.id = v.user_id
 WHERE p.id IS NULL
 UNION ALL
 SELECT 'notifications.user_id -> profiles.id', COUNT(*)

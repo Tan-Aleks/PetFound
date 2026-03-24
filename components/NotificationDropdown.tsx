@@ -75,8 +75,6 @@ export default function NotificationDropdown() {
         return '💬'
       case 'match_found':
         return '🎯'
-      case 'volunteer_alert':
-        return '🚨'
       default:
         return '🔔'
     }

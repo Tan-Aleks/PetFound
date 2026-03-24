@@ -349,38 +349,6 @@ export type Database = {
         }
         Relationships: []
       }
-      volunteers: {
-        Row: {
-          active: boolean | null
-          created_at: string | null
-          districts: string[] | null
-          id: string
-          user_id: string
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string | null
-          districts?: string[] | null
-          id?: string
-          user_id: string
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string | null
-          districts?: string[] | null
-          id?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'volunteers_user_id_fkey'
-            columns: ['user_id']
-            isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
@@ -399,7 +367,7 @@ export type Database = {
     }
     Enums: {
       match_type: 'visual' | 'text' | 'combined'
-      notification_type: 'match_found' | 'message_received' | 'volunteer_alert'
+      notification_type: 'match_found' | 'message_received'
       pet_size: 'small' | 'medium' | 'large'
       pet_status: 'lost' | 'found'
       pet_type: 'dog' | 'cat' | 'small'

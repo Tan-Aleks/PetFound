@@ -22,8 +22,7 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_type') THEN
     CREATE TYPE notification_type AS ENUM (
       'match_found',
-      'message_received',
-      'volunteer_alert'
+      'message_received'
     );
   END IF;
 
@@ -72,14 +71,6 @@ CREATE TABLE IF NOT EXISTS messages (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   read BOOLEAN DEFAULT FALSE,
   CONSTRAINT messages_sender_receiver_check CHECK (sender_id <> receiver_id)
-);
-
-CREATE TABLE IF NOT EXISTS volunteers (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  districts TEXT[] DEFAULT '{}'::TEXT[],
-  active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS external_sources (
@@ -145,7 +136,6 @@ CREATE INDEX IF NOT EXISTS idx_messages_sender_id ON messages(sender_id);
 CREATE INDEX IF NOT EXISTS idx_messages_receiver_id ON messages(receiver_id);
 CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_volunteers_user_id ON volunteers(user_id);
 CREATE INDEX IF NOT EXISTS idx_external_pets_type ON external_pets(type);
 CREATE INDEX IF NOT EXISTS idx_external_pets_district ON external_pets(district);
 CREATE INDEX IF NOT EXISTS idx_external_pets_status ON external_pets(status);
@@ -156,9 +146,6 @@ ALTER TABLE messages
   ALTER COLUMN pet_id SET NOT NULL,
   ALTER COLUMN sender_id SET NOT NULL,
   ALTER COLUMN receiver_id SET NOT NULL;
-
-ALTER TABLE volunteers
-  ALTER COLUMN user_id SET NOT NULL;
 
 ALTER TABLE external_pets
   ALTER COLUMN source_id SET NOT NULL;
@@ -212,7 +199,6 @@ EXECUTE FUNCTION update_updated_at_column();
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE volunteers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE external_sources ENABLE ROW LEVEL SECURITY;
 ALTER TABLE external_pets ENABLE ROW LEVEL SECURITY;
@@ -220,7 +206,6 @@ ALTER TABLE cross_matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles FORCE ROW LEVEL SECURITY;
 ALTER TABLE pets FORCE ROW LEVEL SECURITY;
 ALTER TABLE messages FORCE ROW LEVEL SECURITY;
-ALTER TABLE volunteers FORCE ROW LEVEL SECURITY;
 ALTER TABLE notifications FORCE ROW LEVEL SECURITY;
 ALTER TABLE external_sources FORCE ROW LEVEL SECURITY;
 ALTER TABLE external_pets FORCE ROW LEVEL SECURITY;
@@ -282,17 +267,6 @@ CREATE POLICY "Receivers can mark messages as read" ON messages
     AND sender_id IS NOT NULL
     AND pet_id IS NOT NULL
   );
-
-DROP POLICY IF EXISTS "Users can view their volunteer profile" ON volunteers;
-CREATE POLICY "Users can view their volunteer profile" ON volunteers
-  FOR SELECT
-  USING (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "Users can manage their volunteer profile" ON volunteers;
-CREATE POLICY "Users can manage their volunteer profile" ON volunteers
-  FOR ALL
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Users can view their notifications" ON notifications;
 CREATE POLICY "Users can view their notifications" ON notifications
