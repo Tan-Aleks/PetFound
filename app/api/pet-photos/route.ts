@@ -1,5 +1,5 @@
 import { getAuthorizedUser } from '@/lib/server-auth'
-import { getSupabasePublicServer } from '@/lib/supabase-server'
+import { getSupabaseServer } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const supabase = getSupabasePublicServer()
+    const supabase = getSupabaseServer()
     const uploadedUrls: string[] = []
 
     for (const file of files) {

@@ -1,6 +1,9 @@
 import { getAuthorizedUser } from '@/lib/server-auth'
 import type { Pet } from '@/lib/supabase'
-import { getSupabasePublicServer } from '@/lib/supabase-server'
+import {
+  getSupabasePublicServer,
+  getSupabaseServer,
+} from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -52,7 +55,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     const { id } = await context.params
     const updates = (await request.json()) as Partial<Pet>
-    const supabase = getSupabasePublicServer()
+    const supabase = getSupabaseServer()
 
     const { data: existing, error: existingError } = await supabase
       .from('pets')
@@ -110,7 +113,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     }
 
     const { id } = await context.params
-    const supabase = getSupabasePublicServer()
+    const supabase = getSupabaseServer()
 
     const { data: existing, error: existingError } = await supabase
       .from('pets')

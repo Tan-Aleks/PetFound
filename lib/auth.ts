@@ -1,6 +1,5 @@
 import 'server-only'
 import type { Database } from '@/lib/database.types'
-import { getSupabasePublicServer } from '@/lib/supabase-server'
 import { createClient } from '@supabase/supabase-js'
 import type { NextAuthOptions, Session } from 'next-auth'
 import type { JWT } from 'next-auth/jwt'
@@ -67,7 +66,6 @@ export const authOptions: NextAuthOptions = {
 
         if (mode === 'register') {
           const supabase = getSupabaseAuthClient()
-          const supabaseServer = getSupabasePublicServer()
 
           if (!phone?.trim()) {
             throw new Error('Телефон обязателен')
@@ -78,15 +76,14 @@ export const authOptions: NextAuthOptions = {
           }
 
           const { data: signUpData, error: signUpError } =
-            await supabase.auth.signUp({
+            await supabase.auth.admin.createUser({
               email,
               password,
-              options: {
-                data: {
-                  district,
-                  name: name || email.split('@')[0],
-                  phone,
-                },
+              email_confirm: true,
+              user_metadata: {
+                district,
+                name: name || email.split('@')[0],
+                phone,
               },
             })
 
@@ -101,7 +98,7 @@ export const authOptions: NextAuthOptions = {
             )
           }
 
-          const { data: newUser, error: profileError } = await supabaseServer
+          const { data: newUser, error: profileError } = await supabase
             .from('profiles')
             .upsert({
               district,
@@ -129,7 +126,6 @@ export const authOptions: NextAuthOptions = {
         }
 
         const supabase = getSupabaseAuthClient()
-        const supabaseServer = getSupabasePublicServer()
         const { data: signInData, error: signInError } =
           await supabase.auth.signInWithPassword({
             email,
@@ -140,7 +136,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Неверный email или пароль')
         }
 
-        const { data: user, error } = await supabaseServer
+        const { data: user, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', signInData.user.id)

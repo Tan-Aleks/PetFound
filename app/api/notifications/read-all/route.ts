@@ -1,5 +1,5 @@
 import { getAuthorizedUser } from '@/lib/server-auth'
-import { getSupabasePublicServer } from '@/lib/supabase-server'
+import { getSupabaseServer } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -14,7 +14,7 @@ export async function PUT() {
       )
     }
 
-    const supabase = getSupabasePublicServer()
+    const supabase = getSupabaseServer()
 
     const { error } = await supabase
       .from('notifications')
