@@ -1,9 +1,9 @@
 # Progress
 
 ## Control Changes
-- `last_checked_commit`: `d26a4b1`
+- `last_checked_commit`: `0627718`
 - `checked_at`: `2026-03-24`
-- `comparison_result`: Синхронизировано с последним коммитом. Все deliverables D01-D10 завершены.
+- `comparison_result`: Удалён функционал волонтёров, исправлена проблема с регистрацией/входом.
 
 ## Completed Milestones
 - Реорганизована структура проекта и переход на `bun`.
