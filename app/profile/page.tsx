@@ -1,3 +1,4 @@
+import Header from '@/components/Header'
 import { authOptions } from '@/lib/auth'
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
@@ -12,5 +13,10 @@ export default async function ProfilePage() {
     redirect('/login')
   }
 
-  return <ProfileClient />
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <ProfileClient />
+    </div>
+  )
 }

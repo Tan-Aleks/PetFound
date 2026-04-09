@@ -1,17 +1,17 @@
 import { getAuthorizedUser } from '@/lib/server-auth'
 import type { PetInsert } from '@/lib/supabase'
-import {
-  getSupabasePublicServer,
-  getSupabaseServer,
-} from '@/lib/supabase-server'
+import { getSupabaseServer } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 
+const PET_TYPES = ['dog', 'cat', 'small'] as const
+const PET_STATUSES = ['lost', 'found'] as const
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const supabase = getSupabasePublicServer()
+    const supabase = getSupabaseServer()
     let query = supabase
       .from('pets')
       .select('*')
@@ -25,12 +25,15 @@ export async function GET(request: Request) {
     const search = searchParams.get('query')?.trim()
     const limit = Number.parseInt(searchParams.get('limit') || '', 10)
 
-    if (type) {
-      query = query.eq('type', type)
+    const typedType = PET_TYPES.find((value) => value === type)
+    const typedStatus = PET_STATUSES.find((value) => value === status)
+
+    if (typedType) {
+      query = query.eq('type', typedType)
     }
 
-    if (status) {
-      query = query.eq('status', status)
+    if (typedStatus) {
+      query = query.eq('status', typedStatus)
     }
 
     if (district) {

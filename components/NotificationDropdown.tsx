@@ -8,6 +8,17 @@ import { useEffect, useRef, useState } from 'react'
 
 type Notification = Database['public']['Tables']['notifications']['Row']
 
+type MatchNotificationData = {
+  external_pet_id?: string
+  external_source_name?: string | null
+  external_source_url?: string | null
+  internal_pet_id?: string
+  match_key?: string
+  pet_name?: string | null
+  similarity_score?: number
+  source_home_url?: string | null
+}
+
 export default function NotificationDropdown() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -80,6 +91,20 @@ export default function NotificationDropdown() {
     }
   }
 
+  const getMatchNotificationData = (
+    notification: Notification,
+  ): MatchNotificationData | null => {
+    if (!notification.data || typeof notification.data !== 'object') {
+      return null
+    }
+
+    if (Array.isArray(notification.data)) {
+      return null
+    }
+
+    return notification.data as MatchNotificationData
+  }
+
   return (
     <div className="relative" ref={dropdownRef}>
       <Button
@@ -120,45 +145,90 @@ export default function NotificationDropdown() {
             ) : (
               <ul>
                 {notifications.map((notification) => (
-                  <button
-                    key={notification.id}
-                    type="button"
-                    className={`w-full text-left p-3 border-b last:border-b-0 hover:bg-muted/50 cursor-pointer transition-colors ${
-                      !notification.read ? 'bg-primary/5' : ''
-                    }`}
-                    onClick={() => {
-                      if (!notification.read) {
-                        handleMarkAsRead(notification.id)
-                      }
-                    }}
-                  >
-                    <div className="flex gap-2">
-                      <span className="text-xl">
-                        {getNotificationIcon(notification.type)}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {notification.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground line-clamp-2">
-                          {notification.content}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(
-                            notification.created_at ?? new Date().toISOString(),
-                          ).toLocaleDateString('ru-RU', {
-                            day: 'numeric',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
-                      </div>
-                      {!notification.read && (
-                        <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1" />
-                      )}
+                  <li key={notification.id}>
+                    <div
+                      className={`border-b last:border-b-0 ${
+                        !notification.read ? 'bg-primary/5' : ''
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        className="w-full cursor-pointer p-3 text-left transition-colors hover:bg-muted/50"
+                        onClick={() => {
+                          if (!notification.read) {
+                            handleMarkAsRead(notification.id)
+                          }
+                        }}
+                      >
+                        <div className="flex gap-2">
+                          <span className="text-xl">
+                            {getNotificationIcon(notification.type)}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">
+                              {notification.title}
+                            </p>
+                            <p className="line-clamp-2 text-xs text-muted-foreground">
+                              {notification.content}
+                            </p>
+                            {notification.type === 'match_found' &&
+                              (() => {
+                                const matchData =
+                                  getMatchNotificationData(notification)
+
+                                if (!matchData?.external_source_url) {
+                                  return null
+                                }
+
+                                return (
+                                  <div className="mt-2 flex flex-wrap gap-2">
+                                    <a
+                                      href={matchData.external_source_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs font-medium text-primary hover:underline"
+                                      onClick={(event) =>
+                                        event.stopPropagation()
+                                      }
+                                    >
+                                      Открыть совпадение
+                                    </a>
+                                    {matchData.source_home_url && (
+                                      <a
+                                        href={matchData.source_home_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-muted-foreground hover:underline"
+                                        onClick={(event) =>
+                                          event.stopPropagation()
+                                        }
+                                      >
+                                        {matchData.external_source_name ||
+                                          'Сайт источника'}
+                                      </a>
+                                    )}
+                                  </div>
+                                )
+                              })()}
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {new Date(
+                                notification.created_at ??
+                                  new Date().toISOString(),
+                              ).toLocaleDateString('ru-RU', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </p>
+                          </div>
+                          {!notification.read && (
+                            <div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
+                          )}
+                        </div>
+                      </button>
                     </div>
-                  </button>
+                  </li>
                 ))}
               </ul>
             )}

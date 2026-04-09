@@ -6,12 +6,8 @@ import type { JWT } from 'next-auth/jwt'
 import CredentialsProvider from 'next-auth/providers/credentials'
 
 type CredentialsInput = {
-  district?: string
   email: string
-  mode?: 'login' | 'register'
-  name?: string
   password: string
-  phone?: string
 }
 
 type ExtendedJwt = JWT & {
@@ -50,80 +46,14 @@ export const authOptions: NextAuthOptions = {
       name: 'Credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
-        mode: { label: 'Mode', type: 'text' },
-        name: { label: 'Name', type: 'text' },
-        district: { label: 'District', type: 'text' },
         password: { label: 'Password', type: 'password' },
-        phone: { label: 'Phone', type: 'tel' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error('Email и пароль обязательны')
         }
 
-        const { district, email, password, phone, mode, name } =
-          credentials as CredentialsInput
-
-        if (mode === 'register') {
-          const supabase = getSupabaseAuthClient()
-
-          if (!phone?.trim()) {
-            throw new Error('Телефон обязателен')
-          }
-
-          if (!district?.trim()) {
-            throw new Error('Район проживания обязателен')
-          }
-
-          const { data: signUpData, error: signUpError } =
-            await supabase.auth.admin.createUser({
-              email,
-              password,
-              email_confirm: true,
-              user_metadata: {
-                district,
-                name: name || email.split('@')[0],
-                phone,
-              },
-            })
-
-          if (signUpError) {
-            throw new Error(`Ошибка регистрации: ${signUpError.message}`)
-          }
-
-          const authUser = signUpData.user
-          if (!authUser?.id) {
-            throw new Error(
-              'Ошибка регистрации: пустой идентификатор пользователя',
-            )
-          }
-
-          const { data: newUser, error: profileError } = await supabase
-            .from('profiles')
-            .upsert({
-              district,
-              id: authUser.id,
-              email,
-              phone,
-              name: name || email.split('@')[0],
-            })
-            .select()
-            .single()
-
-          if (profileError) {
-            throw new Error(
-              `Ошибка сохранения профиля: ${profileError.message}`,
-            )
-          }
-
-          return {
-            district: newUser.district,
-            id: newUser.id,
-            email: newUser.email,
-            name: newUser.name,
-            phone: newUser.phone,
-          }
-        }
+        const { email, password } = credentials as CredentialsInput
 
         const supabase = getSupabaseAuthClient()
         const { data: signInData, error: signInError } =
@@ -143,7 +73,40 @@ export const authOptions: NextAuthOptions = {
           .single()
 
         if (error || !user) {
-          throw new Error('Профиль не найден')
+          const userMetadata = signInData.user.user_metadata as {
+            district?: string
+            name?: string
+            phone?: string
+          } | null
+
+          const fallbackProfile = {
+            district: userMetadata?.district?.trim() || null,
+            email: signInData.user.email || email,
+            id: signInData.user.id,
+            name:
+              userMetadata?.name?.trim() ||
+              signInData.user.email?.split('@')[0] ||
+              email.split('@')[0],
+            phone: userMetadata?.phone?.trim() || null,
+          }
+
+          const { data: restoredUser, error: restoreError } = await supabase
+            .from('profiles')
+            .upsert(fallbackProfile)
+            .select()
+            .single()
+
+          if (restoreError || !restoredUser) {
+            throw new Error('Профиль не найден')
+          }
+
+          return {
+            district: restoredUser.district,
+            id: restoredUser.id,
+            email: restoredUser.email,
+            name: restoredUser.name,
+            phone: restoredUser.phone,
+          }
         }
 
         return {

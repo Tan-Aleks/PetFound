@@ -1,9 +1,6 @@
 import { getAuthorizedUser } from '@/lib/server-auth'
 import type { Pet } from '@/lib/supabase'
-import {
-  getSupabasePublicServer,
-  getSupabaseServer,
-} from '@/lib/supabase-server'
+import { getSupabaseServer } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -15,7 +12,7 @@ type RouteContext = {
 export async function GET(_request: Request, context: RouteContext) {
   try {
     const { id } = await context.params
-    const supabase = getSupabasePublicServer()
+    const supabase = getSupabaseServer()
     const { data, error } = await supabase
       .from('pets')
       .select('*')

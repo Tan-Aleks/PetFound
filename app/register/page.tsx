@@ -33,14 +33,31 @@ export default function RegisterPage() {
         return
       }
 
+      const registerResponse = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const registerPayload = (await registerResponse.json()) as {
+        error?: string
+      }
+
+      if (!registerResponse.ok) {
+        setError(registerPayload.error || 'Ошибка при регистрации')
+        return
+      }
+
       const res = await signIn('credentials', {
-        ...formData,
-        mode: 'register',
+        email: formData.email,
+        password: formData.password,
         redirect: false,
       })
 
       if (res?.error) {
-        setError(res.error || 'Ошибка при регистрации')
+        setError('Аккаунт создан, но не удалось выполнить вход')
       } else {
         router.push('/')
         router.refresh()

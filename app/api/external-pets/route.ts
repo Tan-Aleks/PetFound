@@ -1,4 +1,4 @@
-import { getSupabasePublicServer } from '@/lib/supabase-server'
+import { getSupabaseServer } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     const source = searchParams.get('source')
     const limit = Number.parseInt(searchParams.get('limit') || '20', 10)
 
-    const supabase = getSupabasePublicServer()
+    const supabase = getSupabaseServer()
 
     let query = supabase
       .from('external_pets')

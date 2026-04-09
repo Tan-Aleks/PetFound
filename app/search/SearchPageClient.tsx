@@ -6,9 +6,10 @@ import PetCard from '@/components/PetCard'
 import SearchForm from '@/components/SearchForm'
 import SortDialog from '@/components/SortDialog'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { useImageSearch } from '@/hooks/useImageSearch'
 import { useSearchPets } from '@/hooks/usePets'
-import { Filter, Image } from 'lucide-react'
+import { ExternalLink, Filter, Image } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -37,11 +38,13 @@ export default function SearchPageClient() {
   } = useSearchPets()
   const {
     results: imageResults,
+    externalResults,
     loading: imageLoading,
     error: imageError,
     previewUrl,
     searchByImage,
     clearResults,
+    totals: imageTotals,
   } = useImageSearch()
 
   const searchParamsString = searchParams.toString()
@@ -118,6 +121,23 @@ export default function SearchPageClient() {
         : undefined,
   }))
 
+  const externalResultCards = externalResults.map((pet) => ({
+    ai_similarity: pet.ai_similarity,
+    breed: pet.breed ?? undefined,
+    date: pet.date,
+    description: pet.description,
+    district: pet.district,
+    id: pet.id,
+    name: pet.name ?? 'Без имени',
+    photos: pet.photos ?? [],
+    size: pet.size,
+    sourceHomeUrl: pet.source_home_url,
+    sourceName: pet.source_name,
+    sourceUrl: pet.source_url,
+    status: pet.status,
+    type: pet.type,
+  }))
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
@@ -164,6 +184,7 @@ export default function SearchPageClient() {
                   previewUrl={previewUrl}
                   loading={imageLoading}
                   onClear={handleClearImage}
+                  helperText="AI сравнит фото как с объявлениями на платформе, так и с внешними источниками."
                 />
               </div>
             )}
@@ -184,7 +205,7 @@ export default function SearchPageClient() {
                     ? 'AI анализирует изображение...'
                     : 'Ищем объявления...'
                   : searchMode === 'image'
-                    ? `Найдено ${resultsForCards.length} похожих питомцев`
+                    ? `Найдено ${imageTotals.combined} совпадений: ${imageTotals.internal} на платформе и ${imageTotals.external} на внешних сайтах`
                     : `Найдено ${resultsForCards.length} объявлений`}
               </p>
             </div>
@@ -257,23 +278,131 @@ export default function SearchPageClient() {
             </div>
           )}
 
-          {resultsForCards.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {resultsForCards.map((pet) => (
-                <PetCard key={pet.id} {...pet} />
-              ))}
+          {resultsForCards.length > 0 || externalResultCards.length > 0 ? (
+            <div className="space-y-10">
+              {resultsForCards.length > 0 && (
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      Объявления на платформе
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Внутренние объявления ПетПоиск, отсортированные по
+                      выбранным правилам.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {resultsForCards.map((pet) => (
+                      <PetCard key={pet.id} {...pet} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {externalResultCards.length > 0 && (
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      Совпадения на внешних сайтах
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      AI нашел визуально похожие объявления у партнерских
+                      источников.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {externalResultCards.map((pet) => (
+                      <Card
+                        key={pet.id}
+                        className="overflow-hidden transition-shadow hover:shadow-lg"
+                      >
+                        <div className="relative">
+                          {pet.photos.length > 0 && pet.photos[0] ? (
+                            <img
+                              src={pet.photos[0]}
+                              alt={`${pet.name} - ${pet.type}`}
+                              className="h-48 w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-48 items-center justify-center bg-gray-200 text-sm text-gray-500 dark:bg-gray-700 dark:text-gray-300">
+                              Нет фото
+                            </div>
+                          )}
+                          <div className="absolute left-2 top-2 rounded-full bg-sky-500 px-2 py-1 text-xs font-medium text-white">
+                            Внешний источник
+                          </div>
+                          <div className="absolute right-2 top-2 rounded-full bg-amber-500 px-2 py-1 text-xs font-medium text-white">
+                            {pet.ai_similarity}% сходство
+                          </div>
+                        </div>
+                        <CardContent className="space-y-3 p-4">
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {pet.name}
+                            </h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {pet.type}
+                              {pet.breed ? ` • ${pet.breed}` : ''}
+                            </p>
+                          </div>
+
+                          <p className="line-clamp-3 text-sm text-gray-700 dark:text-gray-300">
+                            {pet.description}
+                          </p>
+
+                          <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                            <p>{pet.district}</p>
+                            <p>
+                              {new Date(pet.date).toLocaleDateString('ru-RU')}
+                            </p>
+                            <p>{pet.sourceName || 'Партнерский источник'}</p>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button className="flex-1" asChild>
+                              <a
+                                href={pet.sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <ExternalLink className="mr-2 h-4 w-4" />
+                                Открыть
+                              </a>
+                            </Button>
+                            {pet.sourceHomeUrl && (
+                              <Button
+                                variant="outline"
+                                className="flex-1"
+                                asChild
+                              >
+                                <a
+                                  href={pet.sourceHomeUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  Источник
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             !isLoading && (
               <div className="text-center text-gray-600 dark:text-gray-400 py-12">
                 {searchMode === 'image'
-                  ? 'Загрузите фото питомца для AI-поиска похожих объявлений'
+                  ? 'Загрузите фото питомца для AI-поиска совпадений на платформе и внешних сайтах'
                   : 'По выбранным параметрам ничего не найдено.'}
               </div>
             )
           )}
 
-          {resultsForCards.length > 0 && (
+          {(resultsForCards.length > 0 || externalResultCards.length > 0) && (
             <div className="flex justify-center mt-12">
               <Button variant="outline">Загрузить ещё</Button>
             </div>

@@ -5,6 +5,7 @@ import { Camera, Loader2, X } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 
 interface ImageSearchUploaderProps {
+  helperText?: string
   onImageSelected: (file: File) => void
   previewUrl: string | null
   loading?: boolean
@@ -12,6 +13,7 @@ interface ImageSearchUploaderProps {
 }
 
 export default function ImageSearchUploader({
+  helperText,
   onImageSelected,
   previewUrl,
   loading = false,
@@ -115,8 +117,8 @@ export default function ImageSearchUploader({
       <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-1">
         Поиск по фотографии
       </h4>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-        AI найдёт визуально похожих питомцев
+      <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+        {helperText || 'AI найдёт визуально похожих питомцев'}
       </p>
 
       <Button

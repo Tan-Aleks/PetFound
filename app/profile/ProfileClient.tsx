@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import type { Database } from '@/lib/database.types'
+import { MOSCOW_DISTRICTS } from '@/lib/moscow-districts'
 import { Edit2, LogOut, Save, X } from 'lucide-react'
 import { signOut, useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
@@ -165,14 +166,21 @@ export default function ProfileClient() {
                     Район
                   </label>
                   {editing ? (
-                    <Input
+                    <select
                       id="profile-district"
                       value={formData.district}
                       onChange={(e) =>
                         setFormData({ ...formData, district: e.target.value })
                       }
-                      placeholder="Район проживания"
-                    />
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Выберите район проживания</option>
+                      {MOSCOW_DISTRICTS.map((district) => (
+                        <option key={district} value={district}>
+                          {district}
+                        </option>
+                      ))}
+                    </select>
                   ) : (
                     <p className="text-foreground">
                       {profile?.district || '-'}

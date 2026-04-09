@@ -1,5 +1,5 @@
 import Header from '@/components/Header'
-import { getSupabasePublicServer } from '@/lib/supabase-server'
+import { getSupabaseServer } from '@/lib/supabase-server'
 
 export const metadata = {
   title: 'Внешние источники - ПетПоиск Москва',
@@ -8,7 +8,7 @@ export const metadata = {
 }
 
 export default async function ExternalPage() {
-  const supabase = getSupabasePublicServer()
+  const supabase = getSupabaseServer()
 
   const { data: sources } = await supabase
     .from('external_sources')
