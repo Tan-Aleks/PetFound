@@ -26,6 +26,17 @@ BEGIN
     );
   END IF;
 
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'ai_chat_topic') THEN
+    CREATE TYPE ai_chat_topic AS ENUM (
+      'summary',
+      'source',
+      'contacts',
+      'location',
+      'pet',
+      'blocked'
+    );
+  END IF;
+
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'match_type') THEN
     CREATE TYPE match_type AS ENUM ('visual', 'text', 'combined');
   END IF;
@@ -126,6 +137,16 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS ai_match_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  match_id UUID NOT NULL REFERENCES cross_matches(id) ON DELETE CASCADE,
+  role VARCHAR(20) NOT NULL CHECK (role IN ('assistant', 'user')),
+  content TEXT NOT NULL,
+  topic ai_chat_topic,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 CREATE INDEX IF NOT EXISTS idx_pets_type ON pets(type);
 CREATE INDEX IF NOT EXISTS idx_pets_district ON pets(district);
 CREATE INDEX IF NOT EXISTS idx_pets_status ON pets(status);
@@ -136,6 +157,8 @@ CREATE INDEX IF NOT EXISTS idx_messages_sender_id ON messages(sender_id);
 CREATE INDEX IF NOT EXISTS idx_messages_receiver_id ON messages(receiver_id);
 CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_ai_match_messages_user_match_created_at
+  ON ai_match_messages(user_id, match_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_external_pets_type ON external_pets(type);
 CREATE INDEX IF NOT EXISTS idx_external_pets_district ON external_pets(district);
 CREATE INDEX IF NOT EXISTS idx_external_pets_status ON external_pets(status);
@@ -156,6 +179,10 @@ ALTER TABLE cross_matches
 
 ALTER TABLE notifications
   ALTER COLUMN user_id SET NOT NULL;
+
+ALTER TABLE ai_match_messages
+  ALTER COLUMN user_id SET NOT NULL,
+  ALTER COLUMN match_id SET NOT NULL;
 
 DO $$
 BEGIN
@@ -200,6 +227,7 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_match_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE external_sources ENABLE ROW LEVEL SECURITY;
 ALTER TABLE external_pets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cross_matches ENABLE ROW LEVEL SECURITY;
@@ -207,6 +235,7 @@ ALTER TABLE profiles FORCE ROW LEVEL SECURITY;
 ALTER TABLE pets FORCE ROW LEVEL SECURITY;
 ALTER TABLE messages FORCE ROW LEVEL SECURITY;
 ALTER TABLE notifications FORCE ROW LEVEL SECURITY;
+ALTER TABLE ai_match_messages FORCE ROW LEVEL SECURITY;
 ALTER TABLE external_sources FORCE ROW LEVEL SECURITY;
 ALTER TABLE external_pets FORCE ROW LEVEL SECURITY;
 ALTER TABLE cross_matches FORCE ROW LEVEL SECURITY;
@@ -278,6 +307,16 @@ CREATE POLICY "Users can update their notifications" ON notifications
   FOR UPDATE
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can view their ai match messages" ON ai_match_messages;
+CREATE POLICY "Users can view their ai match messages" ON ai_match_messages
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can create their ai match messages" ON ai_match_messages;
+CREATE POLICY "Users can create their ai match messages" ON ai_match_messages
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id AND role = 'user');
 
 DROP POLICY IF EXISTS "Anyone can view external sources" ON external_sources;
 CREATE POLICY "Anyone can view external sources" ON external_sources

@@ -3,24 +3,43 @@
 import Header from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAiMatchChat } from '@/hooks/useAiMatchChat'
 import { useMessages } from '@/hooks/useMessages'
-import { MessageCircle } from 'lucide-react'
+import { Bot, MessageCircle } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 
 export default function ChatListPageClient() {
   const { data: session, status } = useSession()
   const { conversations, conversationsLoading, error, fetchConversations } =
     useMessages()
+  const {
+    conversations: aiConversations,
+    conversationsLoading: aiConversationsLoading,
+    error: aiError,
+    fetchConversations: fetchAiConversations,
+  } = useAiMatchChat()
 
   const userId = (session?.user as { id?: string } | undefined)?.id
 
   useEffect(() => {
     if (status === 'authenticated' && userId) {
       void fetchConversations(userId)
+      void fetchAiConversations()
     }
-  }, [fetchConversations, status, userId])
+  }, [fetchAiConversations, fetchConversations, status, userId])
+
+  const allConversations = useMemo(
+    () =>
+      [...aiConversations, ...conversations].sort((a, b) =>
+        (b.lastMessageAt || '').localeCompare(a.lastMessageAt || ''),
+      ),
+    [aiConversations, conversations],
+  )
+
+  const combinedError = error || aiError
+  const isLoading = conversationsLoading || aiConversationsLoading
 
   if (status === 'unauthenticated') {
     return (
@@ -58,30 +77,50 @@ export default function ChatListPageClient() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {conversationsLoading ? (
+              {isLoading ? (
                 <p className="text-muted-foreground">Загружаем диалоги...</p>
-              ) : error ? (
-                <p className="text-destructive">{error}</p>
-              ) : conversations.length === 0 ? (
+              ) : combinedError ? (
+                <p className="text-destructive">{combinedError}</p>
+              ) : allConversations.length === 0 ? (
                 <p className="text-muted-foreground">
                   Диалогов пока нет. Перейдите в объявление и нажмите
                   &quot;Написать&quot;.
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {conversations.map((conversation) => (
+                  {allConversations.map((conversation) => (
                     <Link
-                      key={conversation.key}
-                      href={`/chat/${conversation.petId}?with=${conversation.counterpartId}`}
+                      key={
+                        'kind' in conversation && conversation.kind === 'ai'
+                          ? `ai:${conversation.matchId}`
+                          : conversation.key
+                      }
+                      href={
+                        'kind' in conversation && conversation.kind === 'ai'
+                          ? `/chat/${conversation.petId}?aiMatch=${conversation.matchId}`
+                          : `/chat/${conversation.petId}?with=${conversation.counterpartId}`
+                      }
                       className="block rounded-xl border border-border/70 bg-card/70 p-4 transition-colors hover:bg-accent"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="font-semibold text-foreground">
-                            {conversation.petName}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            {'kind' in conversation &&
+                            conversation.kind === 'ai' ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700 dark:bg-sky-950/40 dark:text-sky-300">
+                                <Bot className="h-3.5 w-3.5" />
+                                AI
+                              </span>
+                            ) : null}
+                            <p className="font-semibold text-foreground">
+                              {conversation.petName}
+                            </p>
+                          </div>
                           <p className="text-sm text-muted-foreground">
-                            Собеседник: {conversation.counterpartName}
+                            {'kind' in conversation &&
+                            conversation.kind === 'ai'
+                              ? `Собеседник: ${conversation.title} · ${conversation.sourceName} · ${conversation.similarityPercent}% сходство`
+                              : `Собеседник: ${conversation.counterpartName}`}
                           </p>
                           <p className="mt-1 truncate text-sm text-muted-foreground">
                             {conversation.lastMessage}

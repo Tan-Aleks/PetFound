@@ -34,6 +34,7 @@ type NotificationInsert =
 type ExternalPet = Database['public']['Tables']['external_pets']['Row']
 type ExternalSource = Database['public']['Tables']['external_sources']['Row']
 type CrossMatchInsert = Database['public']['Tables']['cross_matches']['Insert']
+type CrossMatchRow = Database['public']['Tables']['cross_matches']['Row']
 
 type SearchResult<T> = {
   item: T
@@ -212,6 +213,7 @@ function getNotificationKey(
 }
 
 function buildMatchNotification(
+  matchId: string,
   internalPet: InternalPet,
   externalPet: ExternalPet,
   source: Pick<ExternalSource, 'id' | 'name' | 'url'> | undefined,
@@ -228,6 +230,7 @@ function buildMatchNotification(
       external_source_name: source?.name ?? null,
       external_source_url: externalPet.source_url,
       internal_pet_id: internalPet.id,
+      match_id: matchId,
       match_key: getCrossMatchKey(internalPet.id, externalPet.id),
       pet_name: petName,
       similarity_score: similarityScore,
@@ -241,7 +244,7 @@ function buildMatchNotification(
 
 async function syncMatchNotifications(
   supabase: ReturnType<typeof getSupabaseServer>,
-  matchesToPersist: CrossMatchInsert[],
+  matchesToPersist: CrossMatchRow[],
   internalResults: SearchResult<InternalPet>[],
   externalResults: SearchResult<ExternalPet>[],
   sourceById: Map<string, Pick<ExternalSource, 'id' | 'name' | 'url'>>,
@@ -328,6 +331,7 @@ async function syncMatchNotifications(
 
     notificationsToInsert.push(
       buildMatchNotification(
+        match.id ?? getCrossMatchKey(internalPet.id, externalPet.id),
         internalPet,
         externalPet,
         sourceById.get(externalPet.source_id),
@@ -420,7 +424,9 @@ async function syncCrossMatches(
 
   const { data: existingMatches, error: existingMatchesError } = await supabase
     .from('cross_matches')
-    .select('id, internal_pet_id, external_pet_id, similarity_score')
+    .select(
+      'id, created_at, internal_pet_id, external_pet_id, match_type, similarity_score, verified',
+    )
     .in('internal_pet_id', internalPetIds)
     .in('external_pet_id', externalPetIds)
 
@@ -459,14 +465,19 @@ async function syncCrossMatches(
     }
   }
 
+  const persistedMatches = [] as CrossMatchRow[]
+
   if (matchesToInsert.length > 0) {
-    const { error: insertError } = await supabase
+    const { data: insertedMatches, error: insertError } = await supabase
       .from('cross_matches')
       .insert(matchesToInsert)
+      .select('*')
 
     if (insertError) {
       throw insertError
     }
+
+    persistedMatches.push(...((insertedMatches ?? []) as CrossMatchRow[]))
   }
 
   if (matchesToUpdate.length > 0) {
@@ -484,9 +495,24 @@ async function syncCrossMatches(
     )
   }
 
+  for (const match of matchesToPersist) {
+    const existingMatch = existingMatchesByKey.get(
+      getCrossMatchKey(match.internal_pet_id, match.external_pet_id),
+    )
+
+    if (existingMatch) {
+      persistedMatches.push({
+        ...existingMatch,
+        created_at: existingMatch.created_at ?? null,
+        match_type: match.match_type,
+        verified: existingMatch.verified ?? false,
+      } as CrossMatchRow)
+    }
+  }
+
   await syncMatchNotifications(
     supabase,
-    matchesToPersist,
+    persistedMatches,
     internalResults,
     externalResults,
     sourceById,

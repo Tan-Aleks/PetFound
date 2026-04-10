@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import type { Database } from '@/lib/database.types'
 import { Bell, Check } from 'lucide-react'
+import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 
 type Notification = Database['public']['Tables']['notifications']['Row']
 
 type MatchNotificationData = {
+  match_id?: string
   external_pet_id?: string
   external_source_name?: string | null
   external_source_url?: string | null
@@ -105,6 +107,14 @@ export default function NotificationDropdown() {
     return notification.data as MatchNotificationData
   }
 
+  const formatSimilarity = (value?: number) => {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return null
+    }
+
+    return `${Math.round(value * 100)}% сходство`
+  }
+
   return (
     <div className="relative" ref={dropdownRef}>
       <Button
@@ -151,23 +161,29 @@ export default function NotificationDropdown() {
                         !notification.read ? 'bg-primary/5' : ''
                       }`}
                     >
-                      <button
-                        type="button"
-                        className="w-full cursor-pointer p-3 text-left transition-colors hover:bg-muted/50"
-                        onClick={() => {
-                          if (!notification.read) {
-                            handleMarkAsRead(notification.id)
-                          }
-                        }}
-                      >
+                      <div className="p-3 transition-colors hover:bg-muted/50">
                         <div className="flex gap-2">
                           <span className="text-xl">
                             {getNotificationIcon(notification.type)}
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium">
-                              {notification.title}
-                            </p>
+                            <div className="flex items-start justify-between gap-3">
+                              <p className="truncate text-sm font-medium">
+                                {notification.title}
+                              </p>
+                              {!notification.read && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-auto px-2 py-1 text-xs"
+                                  onClick={() =>
+                                    handleMarkAsRead(notification.id)
+                                  }
+                                >
+                                  Прочитано
+                                </Button>
+                              )}
+                            </div>
                             <p className="line-clamp-2 text-xs text-muted-foreground">
                               {notification.content}
                             </p>
@@ -176,38 +192,73 @@ export default function NotificationDropdown() {
                                 const matchData =
                                   getMatchNotificationData(notification)
 
-                                if (!matchData?.external_source_url) {
+                                if (!matchData) {
                                   return null
                                 }
 
+                                const similarityLabel = formatSimilarity(
+                                  matchData.similarity_score,
+                                )
+
                                 return (
-                                  <div className="mt-2 flex flex-wrap gap-2">
-                                    <a
-                                      href={matchData.external_source_url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-xs font-medium text-primary hover:underline"
-                                      onClick={(event) =>
-                                        event.stopPropagation()
-                                      }
-                                    >
-                                      Открыть совпадение
-                                    </a>
-                                    {matchData.source_home_url && (
-                                      <a
-                                        href={matchData.source_home_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-xs text-muted-foreground hover:underline"
-                                        onClick={(event) =>
-                                          event.stopPropagation()
-                                        }
-                                      >
-                                        {matchData.external_source_name ||
-                                          'Сайт источника'}
-                                      </a>
+                                  <>
+                                    {(similarityLabel ||
+                                      matchData.external_source_name) && (
+                                      <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                                        {similarityLabel && (
+                                          <span className="rounded-full bg-muted px-2 py-1">
+                                            {similarityLabel}
+                                          </span>
+                                        )}
+                                        {matchData.external_source_name && (
+                                          <span className="rounded-full bg-muted px-2 py-1">
+                                            {matchData.external_source_name}
+                                          </span>
+                                        )}
+                                      </div>
                                     )}
-                                  </div>
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                      {matchData.internal_pet_id && (
+                                        <Link
+                                          href={`/pet/${matchData.internal_pet_id}`}
+                                          className="text-xs font-medium text-primary hover:underline"
+                                        >
+                                          Открыть объявление
+                                        </Link>
+                                      )}
+                                      {matchData.internal_pet_id &&
+                                        (matchData.match_id ||
+                                          matchData.match_key) && (
+                                          <Link
+                                            href={`/chat/${matchData.internal_pet_id}?aiMatch=${matchData.match_id || matchData.match_key}`}
+                                            className="text-xs font-medium text-primary hover:underline"
+                                          >
+                                            Открыть AI-чат
+                                          </Link>
+                                        )}
+                                      {matchData.external_source_url && (
+                                        <a
+                                          href={matchData.external_source_url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-xs font-medium text-primary hover:underline"
+                                        >
+                                          Открыть совпадение
+                                        </a>
+                                      )}
+                                      {matchData.source_home_url && (
+                                        <a
+                                          href={matchData.source_home_url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-xs text-muted-foreground hover:underline"
+                                        >
+                                          {matchData.external_source_name ||
+                                            'Сайт источника'}
+                                        </a>
+                                      )}
+                                    </div>
+                                  </>
                                 )
                               })()}
                             <p className="mt-1 text-xs text-muted-foreground">
@@ -226,7 +277,7 @@ export default function NotificationDropdown() {
                             <div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
                           )}
                         </div>
-                      </button>
+                      </div>
                     </div>
                   </li>
                 ))}

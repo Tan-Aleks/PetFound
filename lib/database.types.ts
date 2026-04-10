@@ -54,6 +54,51 @@ export type Database = {
           },
         ]
       }
+      ai_match_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          match_id: string
+          role: string
+          topic: Database['public']['Enums']['ai_chat_topic'] | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          match_id: string
+          role: string
+          topic?: Database['public']['Enums']['ai_chat_topic'] | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          match_id?: string
+          role?: string
+          topic?: Database['public']['Enums']['ai_chat_topic'] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'ai_match_messages_match_id_fkey'
+            columns: ['match_id']
+            isOneToOne: false
+            referencedRelation: 'cross_matches'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'ai_match_messages_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       external_pets: {
         Row: {
           breed: string | null
@@ -366,6 +411,13 @@ export type Database = {
       }
     }
     Enums: {
+      ai_chat_topic:
+        | 'summary'
+        | 'source'
+        | 'contacts'
+        | 'location'
+        | 'pet'
+        | 'blocked'
       match_type: 'visual' | 'text' | 'combined'
       notification_type: 'match_found' | 'message_received'
       pet_size: 'small' | 'medium' | 'large'

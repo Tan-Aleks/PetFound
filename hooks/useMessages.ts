@@ -3,6 +3,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import { useCallback, useState } from 'react'
 
 export type ConversationItem = {
+  kind?: 'human'
   key: string
   petId: string
   petName: string
@@ -84,7 +85,12 @@ export function useMessages() {
         )
       }
 
-      setConversations(payload.conversations)
+      setConversations(
+        payload.conversations.map((conversation) => ({
+          ...conversation,
+          kind: 'human' as const,
+        })),
+      )
     } catch (err) {
       setError(
         err instanceof Error

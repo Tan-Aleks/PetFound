@@ -1,5 +1,6 @@
 'use client'
 
+import AiMatchChatPanel from '@/components/AiMatchChatPanel'
 import Header from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -24,6 +25,7 @@ type ChatPetInfo = Pick<
 export default function ChatPageClient({ petId }: ChatPageClientProps) {
   const { data: session, status } = useSession()
   const searchParams = useSearchParams()
+  const aiMatchId = searchParams.get('aiMatch')
   const counterpartFromQuery = searchParams.get('with')
 
   const {
@@ -210,12 +212,20 @@ export default function ChatPageClient({ petId }: ChatPageClientProps) {
                       {pet.contact_name}
                     </span>
                   </p>
+                  {aiMatchId && (
+                    <p className="mt-2 text-sky-700 dark:text-sky-300">
+                      Для этого объявления доступен отдельный AI-чат по внешнему
+                      совпадению.
+                    </p>
+                  )}
                 </div>
               ) : (
                 <p className="text-destructive">Объявление не найдено</p>
               )}
             </CardContent>
           </Card>
+
+          {aiMatchId && <AiMatchChatPanel matchId={aiMatchId} />}
 
           <Card>
             <CardHeader>

@@ -1,9 +1,9 @@
 # Progress
 
 ## Control Changes
-- `last_checked_commit`: `aa76f6a`
-- `checked_at`: `2026-04-09`
-- `comparison_result`: Новых коммитов после `aa76f6a` нет; в рабочем дереве остаются локальные правки auth-flow, profile UI, server-side API и документации. В рамках текущей сессии продолжен cleanup: из `NextAuth Credentials` удалена legacy-ветка регистрации, канонический auth-flow зафиксирован в Memory Bank.
+- `last_checked_commit`: `cb17c64`
+- `checked_at`: `2026-04-10`
+- `comparison_result`: После `aa76f6a` обнаружен коммит `cb17c64 feat: stabilize auth flow and add AI cross-source matches`. В текущей сессии AI-совпадения переведены в отдельный системный чат внутри `/chat`: добавлены новые API, таблица `ai_match_messages`, ограничения допустимых тем вопросов и переходы из списка диалогов и уведомлений.
 
 ## Completed Milestones
 - Реорганизована структура проекта и переход на `bun`.
@@ -23,11 +23,14 @@
 - `bunx tsc --noEmit` сейчас падает на уже сгенерированных файлах в `.next/types`, а не на исходниках приложения.
 - В репозитории остается legacy-директория `docs/memory-bank`; актуальным источником контекста считается только корневой `memory_bank`.
 - `next.config.js` временно игнорирует TypeScript и ESLint ошибки на build.
+- `bunx tsc --noEmit` также падает на ранее существующей типизации в `app/create/page.tsx:148`; ошибка не связана с новым AI-чатом и требует отдельной правки формы создания объявления.
 - **КРИТИЧНО**: В `.env.local` необходимо заменить placeholder-значения на реальные:
   - `SUPABASE_SERVICE_ROLE_KEY` - получить из Supabase Dashboard (Settings > API)
   - `NEXTAUTH_SECRET` - сгенерировать командой `openssl rand -base64 32`
 
 ## Changelog
+- `2026-04-10`: AI-совпадения вынесены в отдельный системный контур чата: добавлены `ai_match_messages`, API `app/api/ai-match-chat/*`, `components/AiMatchChatPanel.tsx`, интеграция со списком `/chat` и переходы из `components/NotificationDropdown.tsx`.
+- `2026-04-10`: `components/NotificationDropdown.tsx` переработан для `match_found`: убрана вложенная кнопка со ссылками внутри, добавлены отдельные действия `Открыть объявление`, `Открыть совпадение`, бейджи источника/сходства и явная кнопка пометки уведомления как прочитанного.
 - `2026-04-09`: Для новых AI-совпадений в `cross_matches` сервер автоматически создает `notifications.match_found` без дублей; `components/NotificationDropdown.tsx` теперь показывает ссылки на внешнее совпадение и сайт-источник.
 - `2026-04-09`: `app/api/pets/search-by-image/route.ts` теперь синхронизирует визуальные пары `pets <-> external_pets` в `cross_matches`, если AI находит достаточно похожие объявления с противоположными статусами.
 - `2026-04-09`: `POST /api/pets/search-by-image` расширен до поиска по `external_pets`; страница `app/search/SearchPageClient.tsx` теперь показывает отдельный блок совпадений с внешних сайтов и суммарную статистику AI-поиска.
