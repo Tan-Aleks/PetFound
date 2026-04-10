@@ -23,12 +23,12 @@
 - `bunx tsc --noEmit` сейчас падает на уже сгенерированных файлах в `.next/types`, а не на исходниках приложения.
 - В репозитории остается legacy-директория `docs/memory-bank`; актуальным источником контекста считается только корневой `memory_bank`.
 - `next.config.js` временно игнорирует TypeScript и ESLint ошибки на build.
-- `bunx tsc --noEmit` также падает на ранее существующей типизации в `app/create/page.tsx:148`; ошибка не связана с новым AI-чатом и требует отдельной правки формы создания объявления.
 - **КРИТИЧНО**: В `.env.local` необходимо заменить placeholder-значения на реальные:
   - `SUPABASE_SERVICE_ROLE_KEY` - получить из Supabase Dashboard (Settings > API)
   - `NEXTAUTH_SECRET` - сгенерировать командой `openssl rand -base64 32`
 
 ## Changelog
+- `2026-04-10`: В `app/create/page.tsx` исправлено сужение типа `animalType` перед вызовом `createPet`; локальная проверка `bunx tsc --noEmit` снова проходит.
 - `2026-04-10`: AI-совпадения вынесены в отдельный системный контур чата: добавлены `ai_match_messages`, API `app/api/ai-match-chat/*`, `components/AiMatchChatPanel.tsx`, интеграция со списком `/chat` и переходы из `components/NotificationDropdown.tsx`.
 - `2026-04-10`: `components/NotificationDropdown.tsx` переработан для `match_found`: убрана вложенная кнопка со ссылками внутри, добавлены отдельные действия `Открыть объявление`, `Открыть совпадение`, бейджи источника/сходства и явная кнопка пометки уведомления как прочитанного.
 - `2026-04-09`: Для новых AI-совпадений в `cross_matches` сервер автоматически создает `notifications.match_found` без дублей; `components/NotificationDropdown.tsx` теперь показывает ссылки на внешнее совпадение и сайт-источник.

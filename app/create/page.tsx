@@ -132,6 +132,12 @@ export default function CreatePage() {
       return
     }
 
+    const petType = animalType
+    if (!petType) {
+      setSubmitError('Выберите тип животного')
+      return
+    }
+
     setIsSubmitting(true)
     setSubmitError('')
 
@@ -145,7 +151,7 @@ export default function CreatePage() {
       await createPet({
         user_id: userId,
         name: formData.name.trim() || null,
-        type: animalType,
+        type: petType,
         breed: formData.breed.trim() || null,
         color: formData.color.trim(),
         size: formData.size as AnimalSize,
