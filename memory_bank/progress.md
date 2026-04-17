@@ -2,8 +2,8 @@
 
 ## Control Changes
 - `last_checked_commit`: `cb17c64`
-- `checked_at`: `2026-04-10`
-- `comparison_result`: После `aa76f6a` обнаружен коммит `cb17c64 feat: stabilize auth flow and add AI cross-source matches`. В текущей сессии AI-совпадения переведены в отдельный системный чат внутри `/chat`: добавлены новые API, таблица `ai_match_messages`, ограничения допустимых тем вопросов и переходы из списка диалогов и уведомлений.
+- `checked_at`: `2026-04-17`
+- `comparison_result`: После `aa76f6a` обнаружен коммит `cb17c64 feat: stabilize auth flow and add AI cross-source matches`. Дополнительно в текущей рабочей сессии завершена UX-полировка `match_found`: ссылки в `components/NotificationDropdown.tsx` теперь закрывают dropdown и автоматически помечают уведомление как прочитанное при переходе.
 
 ## Completed Milestones
 - Реорганизована структура проекта и переход на `bun`.
@@ -28,6 +28,8 @@
   - `NEXTAUTH_SECRET` - сгенерировать командой `openssl rand -base64 32`
 
 ## Changelog
+- `2026-04-17`: В `app/api/messages/route.ts` добавлено создание `message_received` уведомлений при отправке обычного сообщения, а `components/NotificationDropdown.tsx` теперь показывает для них действие `Открыть чат` с переходом в нужный диалог и автоматической пометкой уведомления как прочитанного.
+- `2026-04-17`: В `components/NotificationDropdown.tsx` переходы из `match_found` теперь сразу закрывают dropdown и автоматически помечают уведомление как прочитанное, чтобы навигация к объявлению, AI-чату и внешнему совпадению не конфликтовала со сценарием чтения уведомлений.
 - `2026-04-10`: В `app/create/page.tsx` исправлено сужение типа `animalType` перед вызовом `createPet`; локальная проверка `bunx tsc --noEmit` снова проходит.
 - `2026-04-10`: AI-совпадения вынесены в отдельный системный контур чата: добавлены `ai_match_messages`, API `app/api/ai-match-chat/*`, `components/AiMatchChatPanel.tsx`, интеграция со списком `/chat` и переходы из `components/NotificationDropdown.tsx`.
 - `2026-04-10`: `components/NotificationDropdown.tsx` переработан для `match_found`: убрана вложенная кнопка со ссылками внутри, добавлены отдельные действия `Открыть объявление`, `Открыть совпадение`, бейджи источника/сходства и явная кнопка пометки уведомления как прочитанного.

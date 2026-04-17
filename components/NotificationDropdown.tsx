@@ -21,6 +21,11 @@ type MatchNotificationData = {
   source_home_url?: string | null
 }
 
+type MessageNotificationData = {
+  pet_id?: string
+  sender_id?: string
+}
+
 export default function NotificationDropdown() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -82,6 +87,21 @@ export default function NotificationDropdown() {
     }
   }
 
+  const handleNotificationAction = async (id: string) => {
+    if (!open) {
+      return
+    }
+
+    setOpen(false)
+
+    const notification = notifications.find((item) => item.id === id)
+    if (!notification || notification.read) {
+      return
+    }
+
+    await handleMarkAsRead(id)
+  }
+
   const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
       case 'message_received':
@@ -105,6 +125,20 @@ export default function NotificationDropdown() {
     }
 
     return notification.data as MatchNotificationData
+  }
+
+  const getMessageNotificationData = (
+    notification: Notification,
+  ): MessageNotificationData | null => {
+    if (!notification.data || typeof notification.data !== 'object') {
+      return null
+    }
+
+    if (Array.isArray(notification.data)) {
+      return null
+    }
+
+    return notification.data as MessageNotificationData
   }
 
   const formatSimilarity = (value?: number) => {
@@ -187,6 +221,35 @@ export default function NotificationDropdown() {
                             <p className="line-clamp-2 text-xs text-muted-foreground">
                               {notification.content}
                             </p>
+                            {notification.type === 'message_received' &&
+                              (() => {
+                                const messageData =
+                                  getMessageNotificationData(notification)
+
+                                if (!messageData?.pet_id) {
+                                  return null
+                                }
+
+                                const chatHref = messageData.sender_id
+                                  ? `/chat/${messageData.pet_id}?with=${messageData.sender_id}`
+                                  : `/chat/${messageData.pet_id}`
+
+                                return (
+                                  <div className="mt-2 flex flex-wrap gap-2">
+                                    <Link
+                                      href={chatHref}
+                                      className="text-xs font-medium text-primary hover:underline"
+                                      onClick={() =>
+                                        void handleNotificationAction(
+                                          notification.id,
+                                        )
+                                      }
+                                    >
+                                      Открыть чат
+                                    </Link>
+                                  </div>
+                                )
+                              })()}
                             {notification.type === 'match_found' &&
                               (() => {
                                 const matchData =
@@ -222,6 +285,11 @@ export default function NotificationDropdown() {
                                         <Link
                                           href={`/pet/${matchData.internal_pet_id}`}
                                           className="text-xs font-medium text-primary hover:underline"
+                                          onClick={() =>
+                                            void handleNotificationAction(
+                                              notification.id,
+                                            )
+                                          }
                                         >
                                           Открыть объявление
                                         </Link>
@@ -232,6 +300,11 @@ export default function NotificationDropdown() {
                                           <Link
                                             href={`/chat/${matchData.internal_pet_id}?aiMatch=${matchData.match_id || matchData.match_key}`}
                                             className="text-xs font-medium text-primary hover:underline"
+                                            onClick={() =>
+                                              void handleNotificationAction(
+                                                notification.id,
+                                              )
+                                            }
                                           >
                                             Открыть AI-чат
                                           </Link>
@@ -242,6 +315,11 @@ export default function NotificationDropdown() {
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="text-xs font-medium text-primary hover:underline"
+                                          onClick={() =>
+                                            void handleNotificationAction(
+                                              notification.id,
+                                            )
+                                          }
                                         >
                                           Открыть совпадение
                                         </a>
@@ -252,6 +330,11 @@ export default function NotificationDropdown() {
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="text-xs text-muted-foreground hover:underline"
+                                          onClick={() =>
+                                            void handleNotificationAction(
+                                              notification.id,
+                                            )
+                                          }
                                         >
                                           {matchData.external_source_name ||
                                             'Сайт источника'}

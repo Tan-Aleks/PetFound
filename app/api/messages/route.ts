@@ -79,7 +79,7 @@ export async function POST(request: Request) {
     const supabase = getSupabaseServer()
     const { data: pet, error: petError } = await supabase
       .from('pets')
-      .select('id')
+      .select('id, name')
       .eq('id', payload.petId)
       .single()
 
@@ -111,6 +111,25 @@ export async function POST(request: Request) {
 
     if (error) {
       throw error
+    }
+
+    const notificationContent = `По объявлению «${pet.name || 'Без имени'}» пришло новое сообщение.`
+
+    const { error: notificationError } = await supabase
+      .from('notifications')
+      .insert({
+        content: notificationContent,
+        data: {
+          pet_id: payload.petId,
+          sender_id: auth.userId,
+        },
+        title: 'Новое сообщение',
+        type: 'message_received',
+        user_id: payload.receiverId,
+      })
+
+    if (notificationError) {
+      console.error('Failed to create message notification:', notificationError)
     }
 
     return NextResponse.json({ message: data }, { status: 201 })
